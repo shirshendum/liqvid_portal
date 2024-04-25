@@ -2,22 +2,29 @@
 <html>
 <head>
     <title>Heatmap Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
     <h1>Data Visualization</h1>
     <form action="/update_heatmap" method="post">
-        <label for="dropdown">Select Option:</label>
-        <select id="dropdown" name="dropdown">
-         {% for option in dropdown_options %}
-       		 <option value="{{ option }}">{{ option }}</option>
-   	 {% endfor %}
-        </select>
+        <label for="regionDropdown">Select Region:</label>
+        <select id="regionDropdown" name="regionDropdown" onchange="updateCenters()">
+            <option value="">Select a Region</option>
+            {% for region in region_options %}
+                <option value="{{ region }}">{{ region }}</option>
+            {% endfor %}
+        </select><br>
 
-        <label for="intParam1">Parameter 1:</label>
-        <input type="number" id="intParam1" name="intParam1" required>
+        <label for="centerDropdown">Select Center (optional):</label>
+        <select id="centerDropdown" name="centerDropdown">
+            <option value="">All Centers</option>
+        </select><br>
 
-        <label for="intParam2">Parameter 2:</label>
-        <input type="number" id="intParam2" name="intParam2" required>
+        <label for="month">Month:</label>
+        <input type="number" id="month" name="month" required min="1" max="12"><br>
+
+        <label for="year">Year:</label>
+        <input type="number" id="year" name="year" required min="1900" max="2100"><br>
 
         <input type="submit" value="Generate Heatmap">
     </form>
@@ -26,14 +33,28 @@
         <!-- Heatmap will be displayed here -->
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
-        document.querySelector('form').onsubmit = async function(event) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
-            const response = await axios.post('/update_heatmap', new URLSearchParams(formData));
-            document.getElementById('heatmap').innerHTML = response.data;
+    function updateCenters() {
+        var region = document.getElementById('regionDropdown').value;
+        if (!region) {
+            document.getElementById('centerDropdown').innerHTML = '<option value="">All Centers</option>';
+            return;
         }
+        axios.post('/get_centers', `region=${region}`)
+            .then(function (response) {
+                var centerDropdown = document.getElementById('centerDropdown');
+                centerDropdown.innerHTML = '<option value="">All Centers</option>';
+                response.data.forEach(function (center) {
+                    var option = document.createElement('option');
+                    option.value = center;
+                    option.text = center;
+                    centerDropdown.appendChild(option);
+                });
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    }
     </script>
 </body>
 </html>
