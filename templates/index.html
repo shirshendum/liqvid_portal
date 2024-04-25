@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Heatmap Visualization</title>
+</head>
+<body>
+    <h1>Data Visualization</h1>
+    <form action="/update_heatmap" method="post">
+        <label for="dropdown">Select Option:</label>
+        <select id="dropdown" name="dropdown">
+         {% for option in dropdown_options %}
+       		 <option value="{{ option }}">{{ option }}</option>
+   	 {% endfor %}
+        </select>
+
+        <label for="intParam1">Parameter 1:</label>
+        <input type="number" id="intParam1" name="intParam1" required>
+
+        <label for="intParam2">Parameter 2:</label>
+        <input type="number" id="intParam2" name="intParam2" required>
+
+        <input type="submit" value="Generate Heatmap">
+    </form>
+
+    <div id="heatmap" style="width: 500px; height: 300px;">
+        <!-- Heatmap will be displayed here -->
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.querySelector('form').onsubmit = async function(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const response = await axios.post('/update_heatmap', new URLSearchParams(formData));
+            document.getElementById('heatmap').innerHTML = response.data;
+        }
+    </script>
+</body>
+</html>
+
