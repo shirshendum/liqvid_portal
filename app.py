@@ -8,12 +8,32 @@ import base64
 
 app = Flask(__name__)
 
+#import mysql.connector
+import configparser
+from datetime import datetime
+
+# Get the current date and time
+#current_datetime = datetime.now()
+
+# Print the current date and time
+#print("Current date and time: ", current_datetime)
+
+
+conf = configparser.ConfigParser()
+#conf.read('config.ini')
+conf.read('/home/shirshendu/Desktop/back_1/configs/config_production_db.ini')
+
+db_host = conf['mysql']['host']
+db_user = conf['mysql']['user']
+db_pass = conf['mysql']['password']
+db_name = conf['mysql']['database']
+
 def get_db_connection():
     return mysql.connector.connect(
-        host='4.224.251.12',
-        user='root',
-        password= 'QR5L1Ri2DXxp',
-        database='production_db'
+        host=db_host,
+        user=db_user,
+        password= db_pass,
+        database=db_name
     )
 
 @app.route('/')
@@ -25,10 +45,22 @@ def index():
     cursor.close()
     conn.close()
     return render_template('index.html', region_options=region_options)
-
-@app.route('/get_centers', methods=['POST'])
-def get_centers():
+ 
+@app.route('/get_batches', methods=['POST'])
+def get_batches():
     region_name = request.form['region']
+    center_name = request.form['center']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    query = "SELECT DISTINCT batch_name FROM rpt_hierarchical_usage WHERE region_name = %s AND center_name = %s"
+    cursor.execute(query, (region_name, center_name, ))
+    batch_options = [item[0] for item in cursor.fetchall()]
+    cursor.close()
+    conn.close()
+    return jsonify(batch_options)
+    
+def fetch_centers(region_name):
+    """Utility function to fetch center names based on the region."""
     conn = get_db_connection()
     cursor = conn.cursor()
     query = "SELECT DISTINCT center_name FROM rpt_hierarchical_usage WHERE region_name = %s"
@@ -36,7 +68,24 @@ def get_centers():
     center_options = [item[0] for item in cursor.fetchall()]
     cursor.close()
     conn.close()
+    return center_options
+
+@app.route('/get_centers', methods=['POST'])
+def get_centers():
+    region_name = request.form['region']
+    center_options = fetch_centers(region_name)
     return jsonify(center_options)
+
+def fetch_batches(center_name):
+    """Utility function to fetch batch names based on the center."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    query = "SELECT DISTINCT batch_name FROM rpt_hierarchical_usage WHERE center_name = %s"
+    cursor.execute(query, (center_name,))
+    batch_options = [item[0] for item in cursor.fetchall()]
+    cursor.close()
+    conn.close()
+    return batch_options
 
 @app.route('/update_heatmap', methods=['POST'])
 def update_heatmap():
@@ -55,9 +104,20 @@ def update_heatmap():
             WHERE region_name = %s AND center_name = %s AND month = %s AND year = %s
             GROUP BY day, batch_name
         """
+        query2 = """
+            SELECT batch_name, day, count(*) as num_logins
+            FROM rpt_hierarchical_usage
+            WHERE region_name = %s AND center_name = %s AND month = %s AND year = %s
+            GROUP BY day, batch_name
+        """
         cursor.execute(query, (region, center, month, year))
         data = cursor.fetchall()
         df = pd.DataFrame(data, columns=['batch_name', 'day', 'hours_spent'])
+        
+        cursor.execute(query2, (region, center, month, year))
+        data2 = cursor.fetchall()
+        df2 = pd.DataFrame(data, columns=['batch_name', 'day', 'num_logins'])
+        all_categories = pd.DataFrame({'batch_name': fetch_batches(center)})
     else:
         query = """
             SELECT center_name, day, SUM(actual_seconds)/3600 as hours_spent
@@ -65,22 +125,43 @@ def update_heatmap():
             WHERE region_name = %s AND month = %s AND year = %s
             GROUP BY day, center_name
         """
+        query2 = """
+            SELECT center_name, day, count(*) as num_logins
+            FROM rpt_hierarchical_usage
+            WHERE region_name = %s AND month = %s AND year = %s
+            GROUP BY day, center_name
+        """
         cursor.execute(query, (region, month, year))
         data = cursor.fetchall()
         df = pd.DataFrame(data, columns=['center_name', 'day', 'hours_spent'])
+
+        cursor.execute(query, (region, month, year))
+        data2 = cursor.fetchall()
+        df2 = pd.DataFrame(data, columns=['center_name', 'day', 'num_logins'])
+        all_categories = pd.DataFrame({'center_name': fetch_centers(region)})
+        
     cursor.close()
     conn.close()
 
-    df['hours_spent'] = df['hours_spent'].astype(float)  # Convert Decimal to float
+    df['hours_spent'] = df['hours_spent'].astype(float)
+
+    # Ensure all days of the month are included
+    all_days = pd.DataFrame({'day': range(1, 32)})
+    #all_categories = pd.DataFrame({'category': df['category'].unique()})
+    all_combinations = pd.merge(all_categories.assign(key=1), all_days.assign(key=1), on='key').drop('key', 1)
+    #full_df = pd.merge(all_combinations, df, how='left', on=['category', 'day']).fillna(0)
+
 
     if center:
+        full_df = pd.merge(all_combinations, df, how='left', on=['batch_name', 'day']).fillna(0)
         df_pivot = df.pivot("batch_name", "day", "hours_spent")
-        plt.figure(figsize=(10, 8))
+        plt.figure(figsize=(20, 10))
         sns.heatmap(df_pivot, annot=True, fmt=".1f", cmap="YlGnBu", linewidths=.5)
         plt.title("Hours Spent by batch_name and Day")
     else:
+        full_df = pd.merge(all_combinations, df, how='left', on=['center_name', 'day']).fillna(0)
         df_pivot = df.pivot("center_name", "day", "hours_spent")
-        plt.figure(figsize=(10, 8))
+        plt.figure(figsize=(20, 10))
         sns.heatmap(df_pivot, annot=True, fmt=".1f", cmap="YlGnBu", linewidths=.5)
         plt.title("Hours Spent by center_name and Day")
 

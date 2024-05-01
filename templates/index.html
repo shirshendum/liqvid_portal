@@ -5,31 +5,31 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
-    <h1>Data Visualization</h1>
-    <form action="/update_heatmap" method="post">
-        <label for="regionDropdown">Select Region:</label>
+    <h1>Data Visualization</h1><br><br>
+    <form id="dataForm">
+        <label for="regionDropdown">Select Reseller:</label>
         <select id="regionDropdown" name="regionDropdown" onchange="updateCenters()">
-            <option value="">Select a Region</option>
+            <option value="">Select a Reseller</option>
             {% for region in region_options %}
                 <option value="{{ region }}">{{ region }}</option>
             {% endfor %}
-        </select><br>
+        </select><br><br>
 
-        <label for="centerDropdown">Select Center (optional):</label>
+        <label for="centerDropdown">Select School (optional):</label>
         <select id="centerDropdown" name="centerDropdown">
-            <option value="">All Centers</option>
-        </select><br>
+            <option value="">None</option>
+        </select><br><br>
 
         <label for="month">Month:</label>
-        <input type="number" id="month" name="month" required min="1" max="12"><br>
+        <input type="number" id="month" name="month" required min="1" max="12"><br><br>
 
         <label for="year">Year:</label>
-        <input type="number" id="year" name="year" required min="1900" max="2100"><br>
+        <input type="number" id="year" name="year" required min="1900" max="2100"><br><br>
 
-        <input type="submit" value="Generate Heatmap">
+        <input type="button" value="Generate Heatmap" onclick="generateHeatmap()">
     </form>
 
-    <div id="heatmap" style="width: 500px; height: 300px;">
+    <div id="heatmap" style="width: 800px; height: 600px; margin-top: 20px;">
         <!-- Heatmap will be displayed here -->
     </div>
 
@@ -52,6 +52,17 @@
                 });
             })
             .catch(function (error) {
+                console.log(error);
+            });
+    }
+
+    function generateHeatmap() {
+        var formData = new FormData(document.getElementById('dataForm'));
+        axios.post('/update_heatmap', new URLSearchParams(formData))
+            .then(function(response) {
+                document.getElementById('heatmap').innerHTML = response.data;
+            })
+            .catch(function(error) {
                 console.log(error);
             });
     }
