@@ -7,6 +7,7 @@
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
+            background-color: white; /* Ensures the entire page has a white background */
         }
 
         h1 {
@@ -15,10 +16,9 @@
 
         form {
             margin-top: 20px;
-            background-color: #f4f4f4;
-            padding: 20px;
-            border-radius: 8px;
-            width: 300px;
+            padding: 0;
+            border: none; /* Removes the form border and background */
+            width: 450px;
         }
 
         label {
@@ -28,17 +28,18 @@
         }
 
         select {
-            width: 100%;
+            width: 100%; /* Adjusted to take full width of the form */
             padding: 8px;
             margin-bottom: 20px;
             border-radius: 4px;
-            border: 1px solid #ccc;
+            border: 1px solid #ccc; /* Optional, can remove if you prefer no border at all */
+            background-color: white; /* Keeps background white */
         }
 
         input[type="button"] {
             width: 100%;
             padding: 10px;
-            background-color: #007BFF;
+            background-color: #e67700;
             color: white;
             border: none;
             border-radius: 4px;
@@ -46,15 +47,14 @@
         }
 
         input[type="button"]:hover {
-            background-color: #0056b3;
+            background-color: #e67700;
         }
 
         #heatmap {
             width: 800px;
             height: 600px;
             margin-top: 20px;
-            background-color: #fff;
-            border: 1px solid #ccc;
+            background-color: white; /* Keeps background white */
         }
     </style>
 </head>
@@ -85,7 +85,7 @@
         </select>
 
         <input type="button" value="Generate Heatmap" onclick="generateHeatmap()">
-    </form>
+    </form><br><br><br>
 
     <div id="heatmap">
         <!-- Heatmap will be displayed here -->
@@ -110,7 +110,7 @@
     function populateYearDropdown() {
         var yearDropdown = document.getElementById('year');
         var currentYear = new Date().getFullYear();
-        for (var year = 2000; year <= currentYear; year++) {
+        for (var year = currentYear; year >= 2000; year--) {
             var option = document.createElement('option');
             option.value = year;
             option.text = year;
@@ -144,11 +144,11 @@
         var formData = new FormData(document.getElementById('dataForm'));
         axios.post('/update_heatmap', new URLSearchParams(formData))
             .then(function(response) {
-                document.getElementById('heatmap').innerHTML = response.data;
-            })
-            .catch(function(error) {
-                console.log(error);
-            });
+            document.getElementById('heatmap').innerHTML = response.data;
+        })
+        .catch(function(error) {
+            console.log(error);
+        });
     }
     </script>
 </body>
