@@ -1,6 +1,11 @@
-from flask import Flask, render_template, request, jsonify
+#from flask import Flask, render_template
 import mysql.connector
 import pandas as pd
+
+
+from flask import Flask, render_template, request, jsonify
+#import mysql.connector
+#import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import io
@@ -36,6 +41,7 @@ def get_db_connection():
         database=db_name
     )
 
+
 @app.route('/')
 def index():
     conn = get_db_connection()
@@ -44,7 +50,15 @@ def index():
     region_options = [item[0] for item in cursor.fetchall()]
     cursor.close()
     conn.close()
-    return render_template('index.html', region_options=region_options)
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    placeholders = ', '.join(['%s']*len(region_options))
+    query = """SELECT region_name, center_name, count(*) as num_users, trainer_limit, student_limit, expiry_days, product, license_key FROM rpt_users_test WHERE region_name IN (%s) group by region_name, center_name""" % placeholders
+    cursor.execute(query, region_options)
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template('index.html', region_options = region_options, data = rows)
  
 @app.route('/get_batches', methods=['POST'])
 def get_batches():

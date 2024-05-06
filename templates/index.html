@@ -3,6 +3,10 @@
 <head>
     <title>Liqvid Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -59,9 +63,9 @@
     </style>
 </head>
 <body>
-    <h1>Data Visualization</h1>
+    <h1>Liqvid Portal</h1>
     <form id="dataForm">
-        <label for="regionDropdown">Select Reseller:</label>
+        <label for="regionDropdown">Select Reseller (optional):</label>
         <select id="regionDropdown" name="regionDropdown" onchange="updateCenters()">
             <option value="">Select a Reseller</option>
             {% for region in region_options %}
@@ -86,6 +90,34 @@
 
         <input type="button" value="Generate Heatmap" onclick="generateHeatmap()">
     </form><br><br><br>
+    <table id="myDataTable" class="display">
+        <thead>
+            <tr>
+                <th>region_name</th>
+                <th>center_name</th>
+                <th>num_users</th>
+                <th>trainer_limit</th>
+                <th>student_limit</th>
+                <th>expiry_days</th>
+                <th>product</th>
+                <th>license_key</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+            <tr>
+                <td>{{ row['region_name'] }}</td>
+                <td>{{ row['center_name'] }}</td>
+                <td>{{ row['num_users'] }}</td>
+                <td>{{ row['trainer_limit'] }}</td>
+                <td>{{ row['student_limit'] }}</td>
+                <td>{{ row['expiry_days'] }}</td>
+                <td>{{ row['product'] }}</td>
+                <td>{{ row['license_key'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
     <div id="heatmap">
         <!-- Heatmap will be displayed here -->
@@ -117,28 +149,38 @@
             yearDropdown.appendChild(option);
         }
     }
-
+    
     function updateCenters() {
         var region = document.getElementById('regionDropdown').value;
-        if (!region) {
-            document.getElementById('centerDropdown').innerHTML = '<option value="">All Centers</option>';
-            return;
-        }
-        axios.post('/get_centers', `region=${region}`)
-            .then(function (response) {
-                var centerDropdown = document.getElementById('centerDropdown');
-                centerDropdown.innerHTML = '<option value="">All Centers</option>';
-                response.data.forEach(function (center) {
-                    var option = document.createElement('option');
-                    option.value = center;
-                    option.text = center;
-                    centerDropdown.appendChild(option);
+        var centerDropdown = document.getElementById('centerDropdown');
+
+        if (!region || region === "All Resellers") {
+            // If "All Resellers" is selected or no reseller is selected:
+            centerDropdown.innerHTML = '<option value="">All Centers</option>'; // Reset the dropdown to show only 'All Centers'
+            centerDropdown.disabled = true; // Disable the dropdown as no specific centers need to be selected
+        } else {
+            // If a specific reseller is selected:
+            centerDropdown.disabled = false; // Enable the dropdown
+            centerDropdown.innerHTML = '<option value="">Select a School</option>'; // Provide an option to prompt user selection
+
+            // Fetch centers related to the selected reseller via an AJAX POST request
+            axios.post('/get_centers', `region=${region}`)
+                .then(function (response) {
+                    // Populate the dropdown with centers received from the server
+                    response.data.forEach(function (center) {
+                        var option = document.createElement('option');
+                        option.value = center;
+                        option.text = center;
+                        centerDropdown.appendChild(option);
+                    });
+                })
+                .catch(function (error) {
+                    console.log('Error fetching centers:', error);
+                    // Optionally, handle errors more gracefully in the UI
                 });
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        }
     }
+    
 
     function generateHeatmap() {
         var formData = new FormData(document.getElementById('dataForm'));
@@ -150,6 +192,18 @@
             console.log(error);
         });
     }
+    
+    $(document).ready(function() {
+        // Initialize DataTables on your table
+        var table = $('#myDataTable').DataTable({
+            "paging": true, // Enables pagination
+            "ordering": true, // Enables column sorting
+            "searching": true, // Enables the global search box
+            "info": true, // Provides information about the current page of data
+            "autoWidth": false // Disables automatic column width calculation
+        });
+    });
+    
     </script>
 </body>
 </html>
