@@ -75,7 +75,7 @@
 
         <label for="centerDropdown">Select School (optional):</label>
         <select id="centerDropdown" name="centerDropdown">
-            <option value="">None</option>
+            <option value="">Select a School</option>
         </select>
 
         <label for="month">Month:</label>
@@ -90,15 +90,22 @@
 
         <input type="button" value="Generate Heatmap" onclick="generateHeatmap()">
     </form><br><br><br>
+    
+        <div id="heatmap">
+        <!-- Heatmap will be displayed here -->
+        </div><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+
     <table id="myDataTable" class="display">
         <thead>
             <tr>
                 <th>region_name</th>
                 <th>center_name</th>
-                <th>num_users</th>
+                <th>regd_teachers</th>
+                <th>regd_students</th>
                 <th>trainer_limit</th>
                 <th>student_limit</th>
-                <th>expiry_days</th>
+                <th>center_created_date</th>
+                <th>expiry_date</th>
                 <th>product</th>
                 <th>license_key</th>
             </tr>
@@ -108,10 +115,12 @@
             <tr>
                 <td>{{ row['region_name'] }}</td>
                 <td>{{ row['center_name'] }}</td>
-                <td>{{ row['num_users'] }}</td>
+                <td>{{ row['regd_teachers'] }}</td>
+                <td>{{ row['regd_students'] }}</td>
                 <td>{{ row['trainer_limit'] }}</td>
                 <td>{{ row['student_limit'] }}</td>
-                <td>{{ row['expiry_days'] }}</td>
+                <td>{{ row['center_created_date'] }}</td>
+                <td>{{ row['expiry_date'] }}</td>
                 <td>{{ row['product'] }}</td>
                 <td>{{ row['license_key'] }}</td>
             </tr>
@@ -119,9 +128,9 @@
         </tbody>
     </table>
 
-    <div id="heatmap">
+        <div id="heatmap">
         <!-- Heatmap will be displayed here -->
-    </div>
+        </div>
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -150,36 +159,35 @@
         }
     }
     
-    function updateCenters() {
-        var region = document.getElementById('regionDropdown').value;
-        var centerDropdown = document.getElementById('centerDropdown');
+function updateCenters() {
+    var region = document.getElementById('regionDropdown').value;
+    var centerDropdown = document.getElementById('centerDropdown');
 
-        if (!region || region === "All Resellers") {
-            // If "All Resellers" is selected or no reseller is selected:
-            centerDropdown.innerHTML = '<option value="">All Centers</option>'; // Reset the dropdown to show only 'All Centers'
-            centerDropdown.disabled = true; // Disable the dropdown as no specific centers need to be selected
-        } else {
-            // If a specific reseller is selected:
-            centerDropdown.disabled = false; // Enable the dropdown
-            centerDropdown.innerHTML = '<option value="">Select a School</option>'; // Provide an option to prompt user selection
+    if (!region) {
+        // If no reseller is selected:
+        centerDropdown.innerHTML = '<option value="">Select a School</option>'; // Reset the dropdown to only show the default option
+    } else {
+        // If a specific reseller is selected:
+        centerDropdown.innerHTML = '<option value="">Select a School</option>'; // Provide an option to prompt user selection
 
-            // Fetch centers related to the selected reseller via an AJAX POST request
-            axios.post('/get_centers', `region=${region}`)
-                .then(function (response) {
-                    // Populate the dropdown with centers received from the server
-                    response.data.forEach(function (center) {
-                        var option = document.createElement('option');
-                        option.value = center;
-                        option.text = center;
-                        centerDropdown.appendChild(option);
-                    });
-                })
-                .catch(function (error) {
-                    console.log('Error fetching centers:', error);
-                    // Optionally, handle errors more gracefully in the UI
+        // Fetch centers related to the selected reseller via an AJAX POST request
+        axios.post('/get_centers', `region=${region}`)
+            .then(function (response) {
+                // Populate the dropdown with centers received from the server
+                response.data.forEach(function (center) {
+                    var option = document.createElement('option');
+                    option.value = center;
+                    option.text = center;
+                    centerDropdown.appendChild(option);
                 });
-        }
+            })
+            .catch(function (error) {
+                console.log('Error fetching centers:', error);
+                // Optionally, handle errors more gracefully in the UI
+            });
     }
+}
+
     
 
     function generateHeatmap() {
