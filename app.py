@@ -172,18 +172,18 @@ def update_heatmap():
             df_pivot = df.pivot("batch_name", "day", "hours_spent")
             plt.figure(figsize=(24, 10))
             sns.heatmap(df_pivot, annot=True, fmt=".1f", cmap="YlGnBu", linewidths=.5)
-            plt.title("Hours Spent by batch_name and Day")
+            plt.title("Hours Spent by Batch")
         else:
             #full_df = pd.merge(all_combinations, df, how='left', on=['center_name', 'day']).fillna(0)
             df_pivot = df.pivot("center_name", "day", "hours_spent")
             plt.figure(figsize=(24, 10))
             sns.heatmap(df_pivot, annot=True, fmt=".1f", cmap="YlGnBu", linewidths=.5)
-            plt.title("Hours Spent by center_name and Day")
+            plt.title("Hours Spent by Center")
     else:
         df_pivot = df.pivot("reseller_name", "day", "hours_spent")
         plt.figure(figsize=(24, 10))
         sns.heatmap(df_pivot, annot=True, fmt=".1f", cmap="YlGnBu", linewidths=.5)
-        plt.title("Hours Spent by reseller_name and Day")
+        plt.title("Hours Spent by Reseller")
 
     img = io.BytesIO()
     plt.savefig(img, format='png', bbox_inches='tight')
