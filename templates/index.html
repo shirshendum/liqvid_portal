@@ -6,95 +6,56 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
     <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
     <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
-
     <style>
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
-            background-color: white; /* Ensures the entire page has a white background */
+            background-color: white;
         }
-
-        h1 {
+        h1, h2 {
             color: #333;
         }
-
         form {
             margin-top: 20px;
             padding: 0;
-            border: none; /* Removes the form border and background */
+            border: none;
             width: 450px;
         }
-
         label {
             margin-bottom: 10px;
             display: block;
             color: #666;
         }
-
-        select {
-            width: 100%; /* Adjusted to take full width of the form */
+        select, input[type="button"] {
+            width: 100%;
             padding: 8px;
             margin-bottom: 20px;
             border-radius: 4px;
-            border: 1px solid #ccc; /* Optional, can remove if you prefer no border at all */
-            background-color: white; /* Keeps background white */
+            border: 1px solid #ccc;
+            background-color: white;
         }
-
         input[type="button"] {
-            width: 100%;
-            padding: 10px;
             background-color: #e67700;
             color: white;
             border: none;
-            border-radius: 4px;
             cursor: pointer;
         }
-
         input[type="button"]:hover {
             background-color: #e67700;
         }
-
-        #heatmap {
+        #heatmap, #secondHeatmap {
             width: 800px;
             height: 600px;
             margin-top: 20px;
-            background-color: white; /* Keeps background white */
+            background-color: white;
         }
     </style>
 </head>
 <body>
     <h1>Liqvid Portal</h1>
-    <form id="dataForm">
-        <label for="regionDropdown">Select Reseller (optional):</label>
-        <select id="regionDropdown" name="regionDropdown" onchange="updateCenters()">
-            <option value="">Select a Reseller</option>
-            {% for region in region_options %}
-                <option value="{{ region }}">{{ region }}</option>
-            {% endfor %}
-        </select>
 
-        <label for="centerDropdown">Select School (optional):</label>
-        <select id="centerDropdown" name="centerDropdown">
-            <option value="">Select a School</option>
-        </select>
-
-        <label for="month">Month:</label>
-        <select id="month" name="month" required>
-            <option value="">Select Month</option>
-        </select>
-
-        <label for="year">Year:</label>
-        <select id="year" name="year" required>
-            <option value="">Select Year</option>
-        </select>
-
-        <input type="button" value="Generate Heatmap" onclick="generateHeatmap()">
-    </form><br><br><br>
-    
-        <div id="heatmap">
-        <!-- Heatmap will be displayed here -->
-        </div><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
-
+    <!-- Data Table Section -->
+    <h2>Data Table</h2>
     <table id="myDataTable" class="display">
         <thead>
             <tr>
@@ -128,9 +89,47 @@
         </tbody>
     </table>
 
-        <div id="heatmap">
-        <!-- Heatmap will be displayed here -->
-        </div>
+    <!-- First Heatmap Section -->
+    <h2>First Heatmap</h2>
+    <form id="dataForm">
+        <label for="regionDropdown">Select Reseller (optional):</label>
+        <select id="regionDropdown" name="regionDropdown" onchange="updateCenters()">
+            <option value="">Select a Reseller</option>
+            {% for region in region_options %}
+                <option value="{{ region }}">{{ region }}</option>
+            {% endfor %}
+        </select>
+        <label for="centerDropdown">Select School (optional):</label>
+        <select id="centerDropdown" name="centerDropdown">
+            <option value="">Select a School</option>
+        </select>
+        <label for="month">Month:</label>
+        <select id="month" name="month" required>
+            <option value="">Select Month</option>
+        </select>
+        <label for="year">Year:</label>
+        <select id="year" name="year" required>
+            <option value="">Select Year</option>
+        </select>
+        <input type="button" value="Generate Heatmap" onclick="generateHeatmap()">
+    </form>
+    <div id="heatmap"></div><br><br><br><br><br><br><br><br><br><br><br><br>
+
+    <!-- Placeholder for Second Heatmap Section -->
+    <h2>Second Heatmap</h2>
+    <!-- Form and heatmap for the second heatmap will go here -->
+    <div id="secondHeatmap"></div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        populateMonthDropdown();
+        populateYearDropdown();
+    });
+    // Additional scripts from previous code...
+    </script>
+</body>
+</html>
+
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {

@@ -122,14 +122,14 @@ def update_heatmap():
         #all_categories = pd.DataFrame({'batch_name': fetch_batches(center)})
     else:
         query = """
-            SELECT center_name, day, SUM(usage_hours)/3600 as hours_spent
-            FROM rpt_hierarchical_logins
+            SELECT center_name, day, SUM(usage_hours) as hours_spent
+            FROM rpt_flat_usage
             WHERE region_name = %s AND month = %s AND year = %s
             GROUP BY day, center_name
         """
         query2 = """
-            SELECT center_name, day, sum(login_count) as num_logins
-            FROM rpt_hierarchical_usage
+            SELECT center_name, day, SUM(login_count) as num_logins
+            FROM rpt_flat_logins
             WHERE region_name = %s AND month = %s AND year = %s
             GROUP BY day, center_name
         """
@@ -163,7 +163,7 @@ def update_heatmap():
     else:
         #full_df = pd.merge(all_combinations, df, how='left', on=['center_name', 'day']).fillna(0)
         df_pivot = df.pivot("center_name", "day", "hours_spent")
-        plt.figure(figsize=(15, 8))
+        plt.figure(figsize=(24, 10))
         sns.heatmap(df_pivot, annot=True, fmt=".1f", cmap="YlGnBu", linewidths=.5)
         plt.title("Hours Spent by center_name and Day")
 
