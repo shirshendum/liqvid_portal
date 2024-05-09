@@ -91,6 +91,7 @@
 
     <!-- First Heatmap Section -->
     <h2>First Heatmap</h2>
+
     <form id="dataForm">
         <label for="regionDropdown">Select Reseller (optional):</label>
         <select id="regionDropdown" name="regionDropdown" onchange="updateCenters()">
@@ -113,6 +114,9 @@
         </select>
         <input type="button" value="Generate Heatmap" onclick="generateHeatmap()">
     </form>
+    <div id="loadingIndicator" style="display: none;">
+    <p><p style="font-style: italic;">Loading heatmap, please wait...</p>
+    </div>
     <div id="heatmap"></div><br><br><br><br><br><br><br><br><br><br><br><br>
 
     <!-- Placeholder for Second Heatmap Section -->
@@ -135,28 +139,37 @@
     document.addEventListener('DOMContentLoaded', function () {
         populateMonthDropdown();
         populateYearDropdown();
+        generateInitialHeatmap();
     });
 
-    function populateMonthDropdown() {
-        var monthDropdown = document.getElementById('month');
-        for (var month = 1; month <= 12; month++) {
-            var option = document.createElement('option');
-            option.value = month;
-            option.text = month;
-            monthDropdown.appendChild(option);
+function populateMonthDropdown() {
+    var monthDropdown = document.getElementById('month');
+    var currentMonth = new Date().getMonth() + 1; // getMonth is zero-based; adding 1 to align with human-readable format
+    for (var month = 1; month <= 12; month++) {
+        var option = document.createElement('option');
+        option.value = month;
+        option.text = month;
+        if (month === currentMonth) {
+            option.selected = true; // Set the current month as selected
         }
+        monthDropdown.appendChild(option);
     }
+}
 
-    function populateYearDropdown() {
-        var yearDropdown = document.getElementById('year');
-        var currentYear = new Date().getFullYear();
-        for (var year = currentYear; year >= 2000; year--) {
-            var option = document.createElement('option');
-            option.value = year;
-            option.text = year;
-            yearDropdown.appendChild(option);
+function populateYearDropdown() {
+    var yearDropdown = document.getElementById('year');
+    var currentYear = new Date().getFullYear();
+    for (var year = currentYear; year >= 2000; year--) {
+        var option = document.createElement('option');
+        option.value = year;
+        option.text = year;
+        if (year === currentYear) {
+            option.selected = true; // Set the current year as selected
         }
+        yearDropdown.appendChild(option);
     }
+}
+
     
 function updateCenters() {
     var region = document.getElementById('regionDropdown').value;
@@ -187,16 +200,54 @@ function updateCenters() {
     }
 }
 
+
+
+function showLoadingIndicator() {
+    document.getElementById('loadingIndicator').style.display = 'block'; // Show the loading indicator
+}
+
+function hideLoadingIndicator() {
+    document.getElementById('loadingIndicator').style.display = 'none'; // Hide the loading indicator
+}
+
+
+    function generateInitialHeatmap() {
+        // Set default parameters for the initial heatmap
+        showLoadingIndicator();
+        var today = new Date();
+        var month = today.getMonth() + 1; // JavaScript months are 0-based
+        var year = today.getFullYear();
+
+        // Construct default formData
+        var formData = new FormData();
+        formData.append('month', month);
+        formData.append('year', year);
+
+        // Send request to generate heatmap
+        axios.post('/update_heatmap', new URLSearchParams(formData))
+            .then(function(response) {
+                document.getElementById('heatmap').innerHTML = response.data;
+                hideLoadingIndicator();
+            })
+            .catch(function(error) {
+                console.log('Error generating initial heatmap:', error);
+                hideLoadingIndicator();
+            });
+    }
+
     
 
     function generateHeatmap() {
+        showLoadingIndicator();
         var formData = new FormData(document.getElementById('dataForm'));
         axios.post('/update_heatmap', new URLSearchParams(formData))
             .then(function(response) {
             document.getElementById('heatmap').innerHTML = response.data;
+            hideLoadingIndicator();
         })
         .catch(function(error) {
             console.log(error);
+            hideLoadingIndicator();
         });
     }
     

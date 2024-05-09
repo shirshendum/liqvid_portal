@@ -90,82 +90,100 @@ def fetch_batches(center_name):
 
 @app.route('/update_heatmap', methods=['POST'])
 def update_heatmap():
-    region = request.form['regionDropdown']
+    region = request.form['regionDropdown'] if 'regionDropdown' in request.form and request.form['regionDropdown'] else None
     center = request.form['centerDropdown'] if 'centerDropdown' in request.form and request.form['centerDropdown'] else None
     month = request.form['month']
     year = request.form['year']
 
     conn = get_db_connection()
     cursor = conn.cursor()
+    
+    if region:
 
-    if center:
-        query = """
+        if center:
+            query = """
             SELECT batch_name, day, usage_hours as hours_spent
             FROM rpt_flat_usage
             WHERE region_name = %s AND center_name = %s AND month = %s AND year = %s
-        """
-        # GROUP BY day, batch_name
+            """
+            # GROUP BY day, batch_name
         
-        query2 = """
+            query2 = """
             SELECT batch_name, day, login_count as num_logins
             FROM rpt_flat_logins
             WHERE region_name = %s AND center_name = %s AND month = %s AND year = %s
-        """
-        # GROUP BY day, batch_name
-        cursor.execute(query, (region, center, month, year))
-        data = cursor.fetchall()
-        df = pd.DataFrame(data, columns=['batch_name', 'day', 'hours_spent'])
+            """
+            # GROUP BY day, batch_name
+            cursor.execute(query, (region, center, month, year))
+            data = cursor.fetchall()
+            df = pd.DataFrame(data, columns=['batch_name', 'day', 'hours_spent'])
         
-        cursor.execute(query2, (region, center, month, year))
-        data2 = cursor.fetchall()
-        df2 = pd.DataFrame(data, columns=['batch_name', 'day', 'num_logins'])
-        #all_categories = pd.DataFrame({'batch_name': fetch_batches(center)})
-    else:
-        query = """
+            cursor.execute(query2, (region, center, month, year))
+            data2 = cursor.fetchall()
+            df2 = pd.DataFrame(data, columns=['batch_name', 'day', 'num_logins'])
+            #all_categories = pd.DataFrame({'batch_name': fetch_batches(center)})
+        else:
+            query = """
             SELECT center_name, day, SUM(usage_hours) as hours_spent
             FROM rpt_flat_usage
             WHERE region_name = %s AND month = %s AND year = %s
             GROUP BY day, center_name
-        """
-        query2 = """
+            """
+            query2 = """
             SELECT center_name, day, SUM(login_count) as num_logins
             FROM rpt_flat_logins
             WHERE region_name = %s AND month = %s AND year = %s
             GROUP BY day, center_name
-        """
-        cursor.execute(query, (region, month, year))
-        data = cursor.fetchall()
-        df = pd.DataFrame(data, columns=['center_name', 'day', 'hours_spent'])
+            """
+            cursor.execute(query, (region, month, year))
+            data = cursor.fetchall()
+            df = pd.DataFrame(data, columns=['center_name', 'day', 'hours_spent'])
 
-        cursor.execute(query2, (region, month, year))
-        data2 = cursor.fetchall()
-        df2 = pd.DataFrame(data, columns=['center_name', 'day', 'num_logins'])
-        #all_categories = pd.DataFrame({'center_name': fetch_centers(region)})
+            cursor.execute(query2, (region, month, year))
+            data2 = cursor.fetchall()
+            df2 = pd.DataFrame(data, columns=['center_name', 'day', 'num_logins'])
+            #all_categories = pd.DataFrame({'center_name': fetch_centers(region)})
+            
+    else:
+        query = """
+            SELECT region_name, day, SUM(usage_hours) as hours_spent
+            FROM rpt_flat_usage
+            WHERE month = %s AND year = %s
+            GROUP BY day, region_name """
+        cursor.execute(query, (month, year))
+        data = cursor.fetchall()
+        df = pd.DataFrame(data, columns=['reseller_name', 'day', 'hours_spent'])
         
     cursor.close()
     conn.close()
 
     df['hours_spent'] = df['hours_spent'].astype(float)
 
-    # Ensure all days of the month are included
-    #all_days = pd.DataFrame({'day': range(1, 32)})
-    #all_categories = pd.DataFrame({'category': df['category'].unique()})
-    #all_combinations = pd.merge(all_categories.assign(key=1), all_days.assign(key=1), on='key').drop('key', 1)
-    #full_df = pd.merge(all_combinations, df, how='left', on=['category', 'day']).fillna(0)
+        # Ensure all days of the month are included
+        #all_days = pd.DataFrame({'day': range(1, 32)})
+        #all_categories = pd.DataFrame({'category': df['category'].unique()})
+        #all_combinations = pd.merge(all_categories.assign(key=1), all_days.assign(key=1), on='key').drop('key', 1)
+        #full_df = pd.merge(all_combinations, df, how='left', on=['category', 'day']).fillna(0)
 
-
-    if center:
-        #full_df = pd.merge(all_combinations, df, how='left', on=['batch_name', 'day']).fillna(0)
-        df_pivot = df.pivot("batch_name", "day", "hours_spent")
-        plt.figure(figsize=(24, 10))
-        sns.heatmap(df_pivot, annot=True, fmt=".1f", cmap="YlGnBu", linewidths=.5)
-        plt.title("Hours Spent by batch_name and Day")
+    if region:
+    
+        if center:
+            #full_df = pd.merge(all_combinations, df, how='left', on=['batch_name', 'day']).fillna(0)
+            df_pivot = df.pivot("batch_name", "day", "hours_spent")
+            plt.figure(figsize=(24, 10))
+            sns.heatmap(df_pivot, annot=True, fmt=".1f", cmap="YlGnBu", linewidths=.5)
+            plt.title("Hours Spent by batch_name and Day")
+        else:
+            #full_df = pd.merge(all_combinations, df, how='left', on=['center_name', 'day']).fillna(0)
+            df_pivot = df.pivot("center_name", "day", "hours_spent")
+            plt.figure(figsize=(24, 10))
+            sns.heatmap(df_pivot, annot=True, fmt=".1f", cmap="YlGnBu", linewidths=.5)
+            plt.title("Hours Spent by center_name and Day")
     else:
-        #full_df = pd.merge(all_combinations, df, how='left', on=['center_name', 'day']).fillna(0)
-        df_pivot = df.pivot("center_name", "day", "hours_spent")
+        df_pivot = df.pivot("reseller_name", "day", "hours_spent")
         plt.figure(figsize=(24, 10))
         sns.heatmap(df_pivot, annot=True, fmt=".1f", cmap="YlGnBu", linewidths=.5)
-        plt.title("Hours Spent by center_name and Day")
+        plt.title("Hours Spent by reseller_name and Day")
 
     img = io.BytesIO()
     plt.savefig(img, format='png', bbox_inches='tight')
