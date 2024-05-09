@@ -56,6 +56,26 @@
 
     <!-- Data Table Section -->
     <h2>Data Table</h2>
+    
+    <form id="dataTableForm">
+    <label for="tableRegionDropdown">Select Reseller:</label>
+    <select id="tableRegionDropdown" name="tableRegionDropdown">
+        <option value="">All Resellers</option>
+        {% for region in region_options %}
+            <option value="{{ region }}">{{ region }}</option>
+        {% endfor %}
+    </select>
+    
+    <label for="startDate">Start Date:</label>
+    <input type="date" id="startDate" name="startDate" value="2023-01-01" min="2023-01-01"> <br><br>
+
+    <label for="endDate">End Date:</label>
+    <input type="date" id="endDate" name="endDate" value="{{ current_date }}" max="{{ current_date }}" min="{{ current_date }}"> <br><br>
+
+    <input type="button" value="Filter Data" onclick="filterDataTable()">
+    </form>
+    
+    
     <table id="myDataTable" class="display">
         <thead>
             <tr>
@@ -65,7 +85,7 @@
                 <th>regd_students</th>
                 <th>trainer_limit</th>
                 <th>student_limit</th>
-                <th>center_created_date</th>
+                <th>center_created</th>
                 <th>expiry_date</th>
                 <th>product</th>
                 <th>license_key</th>
@@ -135,11 +155,16 @@
 </html>
 
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
+<script>
+        document.addEventListener('DOMContentLoaded', function () {
         populateMonthDropdown();
         populateYearDropdown();
         generateInitialHeatmap();
+        document.getElementById('endDate').value = new Date().toISOString().slice(0, 10);
+        document.getElementById('endDate').min = document.getElementById('startDate').value;
+        document.getElementById('startDate').addEventListener('change', function() {
+        document.getElementById('endDate').min = this.value;
+        });
     });
 
 function populateMonthDropdown() {

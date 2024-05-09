@@ -191,6 +191,35 @@ def update_heatmap():
     plot_url = base64.b64encode(img.getvalue()).decode('utf8')
     return f'<img src="data:image/png;base64,{plot_url}" />'
     
+    
+    
+@app.route('/filter_data_table', methods=['POST'])
+def filter_data_table():
+    region = request.form.get('tableRegionDropdown')
+    start_date = request.form.get('startDate')
+    end_date = request.form.get('endDate')
+
+    query = """SELECT rut.region_name, rut.center_name, COUNT(CASE WHEN rut.user_role = 'INSTRUCTOR' THEN 1 END) as regd_teachers, COUNT(CASE WHEN rut.user_role = 'LEARNER' THEN 1 END) as regd_students, rut.trainer_limit, rut.student_limit, date(rut.center_created_on) as center_created_date, DATE(DATE_ADD(rut.center_created_on, INTERVAL rut.expiry_days DAY)) AS expiry_date, rut.product, rut.license_key FROM (SELECT DISTINCT region_name, center_name, user_role, trainer_limit, student_limit, center_created_on, expiry_days, product, license_key FROM rpt_users_test) rut
+    
+    
+    
+     WHERE """
+    
+    params = [start_date, end_date]
+
+    if region:
+        query += " AND region_name = %s"
+        params.append(region)
+    query += "group by region_name, center_name"
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return jsonify([dict(row) for row in rows])  # Ensure response is JSON serializable
+        
 if __name__ == '__main__':
     app.run(debug=True)
 
