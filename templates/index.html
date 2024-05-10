@@ -56,7 +56,6 @@
 
     <!-- Data Table Section -->
     <h2>Overview</h2>
-    
     <form id="dataTableForm">
     <label for="tableRegionDropdown">Select Reseller:</label>
     <select id="tableRegionDropdown" name="tableRegionDropdown">
@@ -75,6 +74,9 @@
     <input type="button" value="Filter Data" onclick="filterDataTable()">
     </form>
     
+    <div id="loadingIndicator" style="display: none;">
+    <p style="font-style: italic;">Loading table, please wait...</p>
+    </div>
     
     <table id="myDataTable" class="display">
         <thead>
@@ -273,6 +275,66 @@ function hideLoadingIndicator() {
                 hideLoadingIndicator();
             });
     }
+
+    
+function filterDataTable() {
+    var startDate = document.getElementById('startDate').value;
+    var endDate = document.getElementById('endDate').value;
+
+    // Check if the date fields are filled
+    if (!startDate || !endDate) {
+        alert("Please fill in both the start date and end date.");
+        return; // Stop the function if dates are not filled
+    }
+
+    var formData = new FormData(document.getElementById('dataTableForm'));
+    showLoadingIndicator(); // Optionally show a loading indicator
+
+    axios.post('/filter_data_table', new URLSearchParams(formData))
+        .then(function(response) {
+            updateDataTable(response.data);
+            hideLoadingIndicator(); // Hide the loading indicator when done
+        })
+        .catch(function(error) {
+            console.error('Error filtering data table:', error);
+            hideLoadingIndicator(); // Ensure loading indicator is hidden on error
+        });
+}
+
+function showLoadingIndicator() {
+    document.getElementById('loadingIndicator').style.display = 'block'; // Show the loading indicator
+}
+
+function hideLoadingIndicator() {
+    document.getElementById('loadingIndicator').style.display = 'none'; // Hide the loading indicator
+}
+
+function updateDataTable(data) {
+    var table = $('#myDataTable').DataTable();
+    table.clear(); // Clear existing data
+    data.forEach(function(item) {
+        table.row.add([
+            item.region_name,
+            item.center_name,
+            item.regd_users,
+            item.regd_teachers,
+            item.trainer_limit,
+            item.regd_students,
+            item.student_limit,
+            item.center_created_date,
+            item.expiry_date,
+            item.product,
+            item.license_key,
+            item.hours_spent,
+            item.hours_teachers,
+            item.hours_students,
+            item.num_logins,
+            item.teacher_logins,
+            item.student_logins
+        ]);
+    });
+    table.draw(); // Redraw the table with new data
+}
 
     
 

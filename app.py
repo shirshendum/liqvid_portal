@@ -198,8 +198,79 @@ def update_heatmap():
     img.seek(0)
     plot_url = base64.b64encode(img.getvalue()).decode('utf8')
     return f'<img src="data:image/png;base64,{plot_url}" />'
+   
+
+@app.route('/filter_data_table', methods=['POST'])
+def filter_data_table():
+    region = request.form.get('tableRegionDropdown')
+    start_date = request.form.get('startDate')
+    end_date = request.form.get('endDate')
     
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT DISTINCT region_name FROM rpt_flat_usage")
+    region_options = [item[0] for item in cursor.fetchall()]
+    cursor.close()
+    conn.close()
+
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    placeholders = ', '.join(['%s']*len(region_options))
     
+    # Parse the start and end dates into components
+    start_year, start_month, start_day = map(int, start_date.split('-'))
+    end_year, end_month, end_day = map(int, end_date.split('-'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Base query for when no reseller is chosen
+    
+    query = """SELECT region_name, center_name, regd_users, regd_teachers, trainer_limit, regd_students, student_limit, center_created_date, expiry_date, product, license_key, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins FROM
+    (SELECT region_id, region_name, center_id, center_name, COUNT(DISTINCT user_id) as regd_users,
+    COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id END) as regd_teachers, trainer_limit,
+    COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 END) as regd_students, student_limit, 
+    date(center_created_on) as center_created_date, DATE(DATE_ADD(center_created_on, INTERVAL expiry_days DAY)) AS expiry_date, product, license_key
+    FROM rpt_users_test WHERE region_name IN (%s) group by region_id, center_id) rut
+    LEFT JOIN (SELECT center_id, day, month, year, SUM(actual_seconds)/3600 AS hours_spent, SUM(CASE WHEN user_role = 'INSTRUCTOR' THEN actual_seconds ELSE 0 END)/3600 AS hours_teachers, SUM(CASE WHEN user_role = 'LEARNER' THEN actual_seconds ELSE 0 END)/3600 AS hours_students FROM rpt_hierarchical_usage GROUP BY center_id) rhu on rhu.center_id = rut.center_id
+    LEFT JOIN (SELECT center_id, day, month, year, COUNT(*) AS num_logins, COUNT(CASE WHEN user_role = 'INSTRUCTOR' THEN 1 ELSE NULL END) AS teacher_logins, COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 ELSE NULL END) AS student_logins FROM rpt_hierarchical_logins GROUP BY center_id) rhl on rhl.center_id = rut.center_id
+    """ % placeholders
+
+#    query = """
+#    SELECT * FROM your_table
+#    WHERE (year > %s OR (year = %s AND month > %s) OR (year = %s AND month = %s AND day >= %s))
+#      AND (year < %s OR (year = %s AND month < %s) OR (year = %s AND month = %s AND day <= %s))
+#    """
+
+    params = [region_options, start_year, start_year, start_month, start_year, start_month, start_day,
+              end_year, end_year, end_month, end_year, end_month, end_day]
+
+    if region:
+        # Extend the query to include a filter by the selected reseller
+        query = """SELECT region_name, center_name, regd_users, regd_teachers, trainer_limit, regd_students, student_limit, center_created_date, expiry_date, product, license_key, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins FROM
+    (SELECT region_id, region_name, center_id, center_name, COUNT(DISTINCT user_id) as regd_users,
+    COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id END) as regd_teachers, trainer_limit,
+    COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 END) as regd_students, student_limit, 
+    date(center_created_on) as center_created_date, DATE(DATE_ADD(center_created_on, INTERVAL expiry_days DAY)) AS expiry_date, product, license_key
+    FROM rpt_users_test WHERE region_name = %s 
+    group by region_id, center_id) rut
+    LEFT JOIN (SELECT center_id, day, month, year, SUM(actual_seconds)/3600 AS hours_spent, SUM(CASE WHEN user_role = 'INSTRUCTOR' THEN actual_seconds ELSE 0 END)/3600 AS hours_teachers, SUM(CASE WHEN user_role = 'LEARNER' THEN actual_seconds ELSE 0 END)/3600 AS hours_students FROM rpt_hierarchical_usage 
+    WHERE (year > %s OR (year = %s AND month > %s) OR (year = %s AND month = %s AND day >= %s))
+    AND (year < %s OR (year = %s AND month < %s) OR (year = %s AND month = %s AND day <= %s))
+    GROUP BY center_id) rhu on rhu.center_id = rut.center_id
+    LEFT JOIN (SELECT center_id, day, month, year, COUNT(*) AS num_logins, COUNT(CASE WHEN user_role = 'INSTRUCTOR' THEN 1 ELSE NULL END) AS teacher_logins, COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 ELSE NULL END) AS student_logins FROM rpt_hierarchical_logins 
+    WHERE (year > %s OR (year = %s AND month > %s) OR (year = %s AND month = %s AND day >= %s))
+    AND (year < %s OR (year = %s AND month < %s) OR (year = %s AND month = %s AND day <= %s))
+    GROUP BY center_id) rhl on rhl.center_id = rut.center_id"""
+        params = [region, start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day, start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day]
+
+    cursor.execute(query, params)
+    results = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return jsonify([dict(row) for row in results])
         
 if __name__ == '__main__':
     app.run(debug=True)
