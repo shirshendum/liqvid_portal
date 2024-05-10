@@ -53,9 +53,10 @@
 </head>
 <body>
     <h1>Liqvid Portal</h1>
+   <div id="lastUpdatedDisplay">Data last updated: <span id="lastUpdatedDate">Loading...</span></div>
 
     <!-- Data Table Section -->
-    <h2>Overview</h2>
+    <h2>1. Overview</h2>
     <form id="dataTableForm">
     <label for="tableRegionDropdown">Select Reseller:</label>
     <select id="tableRegionDropdown" name="tableRegionDropdown">
@@ -85,8 +86,8 @@
                 <th>School</th>
                 <th>Regd_users</th>
                 <th>Regd_teachers</th>
-                <th>Trainer_limit</th>
                 <th>Regd_students</th>
+                <th>Trainer_limit</th>
                 <th>Student_limit</th>
                 <th>Center_created</th>
                 <th>Expiry_date</th>
@@ -107,8 +108,8 @@
                 <td>{{ row['center_name'] }}</td>
                 <td>{{ row['regd_users'] }}</td>
                 <td>{{ row['regd_teachers'] }}</td>
-                <td>{{ row['trainer_limit'] }}</td>
                 <td>{{ row['regd_students'] }}</td>
+                <td>{{ row['trainer_limit'] }}</td>
                 <td>{{ row['student_limit'] }}</td>
                 <td>{{ row['center_created_date'] }}</td>
                 <td>{{ row['expiry_date'] }}</td>
@@ -126,7 +127,7 @@
     </table>
 
     <!-- First Heatmap Section -->
-    <h2>Usage Heatmap</h2>
+    <h2>2. Usage Heatmap</h2>
 
     <form id="dataForm">
         <label for="regionDropdown">Select Reseller (optional):</label>
@@ -156,7 +157,7 @@
     <div id="heatmap"></div><br><br><br><br><br><br><br><br><br><br><br><br>
 
     <!-- Placeholder for Second Heatmap Section -->
-    <h2>Logins Heatmap</h2>
+    <h2>3. Logins Heatmap</h2>
     <!-- Form and heatmap for the second heatmap will go here -->
     <div id="secondHeatmap"></div>
 
@@ -318,8 +319,8 @@ function updateDataTable(data) {
             item.center_name,
             item.regd_users,
             item.regd_teachers,
-            item.trainer_limit,
             item.regd_students,
+            item.trainer_limit,
             item.student_limit,
             item.center_created_date,
             item.expiry_date,
