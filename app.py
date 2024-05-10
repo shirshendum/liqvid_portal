@@ -40,7 +40,15 @@ def index():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     placeholders = ', '.join(['%s']*len(region_options))
-    query = """SELECT region_name, center_name, COUNT(CASE WHEN user_role = 'INSTRUCTOR' THEN 1 END) as regd_teachers, COUNT(CASE WHEN user_role = 'INSTRUCTOR' THEN 1 END) as regd_students, trainer_limit, student_limit, date(center_created_on) as center_created_date, DATE(DATE_ADD(center_created_on, INTERVAL expiry_days DAY)) AS expiry_date, product, license_key FROM rpt_users_test WHERE region_name IN (%s) group by region_name, center_name""" % placeholders
+    query = """ SELECT region_name, center_name, regd_users, regd_teachers, trainer_limit, regd_students, student_limit, center_created_date, expiry_date, product, license_key, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins FROM
+    (SELECT region_id, region_name, center_id, center_name, COUNT(DISTINCT user_id) as regd_users,
+    COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id END) as regd_teachers, trainer_limit,
+    COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 END) as regd_students, student_limit, 
+    date(center_created_on) as center_created_date, DATE(DATE_ADD(center_created_on, INTERVAL expiry_days DAY)) AS expiry_date, product, license_key
+    FROM rpt_users_test WHERE region_name IN (%s) group by region_id, center_id) rut
+    LEFT JOIN (SELECT center_id, day, month, year, SUM(actual_seconds)/3600 AS hours_spent, SUM(CASE WHEN user_role = 'INSTRUCTOR' THEN actual_seconds ELSE 0 END)/3600 AS hours_teachers, SUM(CASE WHEN user_role = 'LEARNER' THEN actual_seconds ELSE 0 END)/3600 AS hours_students FROM rpt_hierarchical_usage GROUP BY center_id) rhu on rhu.center_id = rut.center_id
+    LEFT JOIN (SELECT center_id, day, month, year, COUNT(*) AS num_logins, COUNT(CASE WHEN user_role = 'INSTRUCTOR' THEN 1 ELSE NULL END) AS teacher_logins, COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 ELSE NULL END) AS student_logins FROM rpt_hierarchical_logins GROUP BY center_id) rhl on rhl.center_id = rut.center_id
+    """ % placeholders
     cursor.execute(query, region_options)
     rows = cursor.fetchall()
     cursor.close()
@@ -192,33 +200,6 @@ def update_heatmap():
     return f'<img src="data:image/png;base64,{plot_url}" />'
     
     
-    
-@app.route('/filter_data_table', methods=['POST'])
-def filter_data_table():
-    region = request.form.get('tableRegionDropdown')
-    start_date = request.form.get('startDate')
-    end_date = request.form.get('endDate')
-
-    query = """SELECT rut.region_name, rut.center_name, COUNT(CASE WHEN rut.user_role = 'INSTRUCTOR' THEN 1 END) as regd_teachers, COUNT(CASE WHEN rut.user_role = 'LEARNER' THEN 1 END) as regd_students, rut.trainer_limit, rut.student_limit, date(rut.center_created_on) as center_created_date, DATE(DATE_ADD(rut.center_created_on, INTERVAL rut.expiry_days DAY)) AS expiry_date, rut.product, rut.license_key FROM (SELECT DISTINCT region_name, center_name, user_role, trainer_limit, student_limit, center_created_on, expiry_days, product, license_key FROM rpt_users_test) rut
-    
-    
-    
-     WHERE """
-    
-    params = [start_date, end_date]
-
-    if region:
-        query += " AND region_name = %s"
-        params.append(region)
-    query += "group by region_name, center_name"
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute(query, params)
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
-
-    return jsonify([dict(row) for row in rows])  # Ensure response is JSON serializable
         
 if __name__ == '__main__':
     app.run(debug=True)
