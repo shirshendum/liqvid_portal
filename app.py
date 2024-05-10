@@ -40,7 +40,7 @@ def index():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     placeholders = ', '.join(['%s']*len(region_options))
-    query = """ SELECT region_name, center_name, regd_users, regd_teachers, trainer_limit, regd_students, student_limit, center_created_date, expiry_date, product, license_key, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins FROM
+    query = """ SELECT region_name, "na" as center_name, regd_users, regd_teachers, regd_students, "na" as trainer_limit, "na" as student_limit, "na" as center_created_date, "na" as expiry_date, "na" as product, "na" as license_key, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins FROM
     (SELECT region_id, region_name, center_id, center_name, COUNT(DISTINCT user_id) as regd_users,
     COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id END) as regd_teachers, trainer_limit,
     COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 END) as regd_students, student_limit, 
@@ -227,7 +227,7 @@ def filter_data_table():
 
     # Base query for when no reseller is chosen
     
-    query = """SELECT region_name, "na" as center_name, regd_users, regd_teachers, "na" as trainer_limit, regd_students, "na" as student_limit, "na" as center_created_date, "na" as expiry_date, "na" as product, "na" as license_key, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins FROM
+    query = """SELECT region_name, "na" as center_name, regd_users, regd_teachers, regd_students, "na" as trainer_limit, "na" as student_limit, "na" as center_created_date, "na" as expiry_date, "na" as product, "na" as license_key, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins FROM
     (SELECT region_id, region_name, COUNT(DISTINCT user_id) as regd_users,
     COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id END) as regd_teachers,
     COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 END) as regd_students
@@ -247,7 +247,7 @@ def filter_data_table():
 
     if region:
         # Extend the query to include a filter by the selected reseller
-        query = """SELECT region_name, center_name, regd_users, regd_teachers, trainer_limit, regd_students, student_limit, center_created_date, expiry_date, product, license_key, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins FROM
+        query = """SELECT region_name, center_name, regd_users, regd_teachers, regd_students, trainer_limit, student_limit, center_created_date, expiry_date, product, license_key, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins FROM
     (SELECT region_id, region_name, center_id, center_name, COUNT(DISTINCT user_id) as regd_users,
     COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id END) as regd_teachers, trainer_limit,
     COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 END) as regd_students, student_limit, 
