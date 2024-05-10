@@ -3,131 +3,230 @@
 <head>
     <title>Liqvid Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
-            background-color: white; /* Ensures the entire page has a white background */
+            background-color: white;
         }
-
-        h1 {
+        h1, h2 {
             color: #333;
         }
-
         form {
             margin-top: 20px;
             padding: 0;
-            border: none; /* Removes the form border and background */
+            border: none;
             width: 450px;
         }
-
         label {
             margin-bottom: 10px;
             display: block;
             color: #666;
         }
-
-        select {
-            width: 100%; /* Adjusted to take full width of the form */
+        select, input[type="button"] {
+            width: 100%;
             padding: 8px;
             margin-bottom: 20px;
             border-radius: 4px;
-            border: 1px solid #ccc; /* Optional, can remove if you prefer no border at all */
-            background-color: white; /* Keeps background white */
+            border: 1px solid #ccc;
+            background-color: white;
         }
-
         input[type="button"] {
-            width: 100%;
-            padding: 10px;
             background-color: #e67700;
             color: white;
             border: none;
-            border-radius: 4px;
             cursor: pointer;
         }
-
         input[type="button"]:hover {
             background-color: #e67700;
         }
-
-        #heatmap {
+        #heatmap, #secondHeatmap {
             width: 800px;
             height: 600px;
             margin-top: 20px;
-            background-color: white; /* Keeps background white */
+            background-color: white;
         }
     </style>
 </head>
 <body>
-    <h1>Data Visualization</h1>
+    <h1>Liqvid Portal</h1>
+
+    <!-- Data Table Section -->
+    <h2>Overview</h2>
+    <form id="dataTableForm">
+    <label for="tableRegionDropdown">Select Reseller:</label>
+    <select id="tableRegionDropdown" name="tableRegionDropdown">
+        <option value="">All Resellers</option>
+        {% for region in region_options %}
+            <option value="{{ region }}">{{ region }}</option>
+        {% endfor %}
+    </select>
+    
+    <label for="startDate">Start Date:</label>
+    <input type="date" id="startDate" name="startDate" value="2023-01-01" min="2023-01-01"> <br><br>
+
+    <label for="endDate">End Date:</label>
+    <input type="date" id="endDate" name="endDate" value="{{ current_date }}" max="{{ current_date }}" min="{{ current_date }}"> <br><br>
+
+    <input type="button" value="Filter Data" onclick="filterDataTable()">
+    </form>
+    
+    <div id="loadingIndicator" style="display: none;">
+    <p style="font-style: italic;">Loading table, please wait...</p>
+    </div>
+    
+    <table id="myDataTable" class="display">
+        <thead>
+            <tr>
+                <th>Reseller</th>
+                <th>School</th>
+                <th>Regd_users</th>
+                <th>Regd_teachers</th>
+                <th>Trainer_limit</th>
+                <th>Regd_students</th>
+                <th>Student_limit</th>
+                <th>Center_created</th>
+                <th>Expiry_date</th>
+                <th>Product</th>
+                <th>License_key</th>
+                <th>Hours_Spent</th>
+                <th>Hours_Teachers</th>
+                <th>Hours_Students</th>
+                <th>Num_logins</th>
+                <th>Teacher_logins</th>
+                <th>Student_logins</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+            <tr>
+                <td>{{ row['region_name'] }}</td>
+                <td>{{ row['center_name'] }}</td>
+                <td>{{ row['regd_users'] }}</td>
+                <td>{{ row['regd_teachers'] }}</td>
+                <td>{{ row['trainer_limit'] }}</td>
+                <td>{{ row['regd_students'] }}</td>
+                <td>{{ row['student_limit'] }}</td>
+                <td>{{ row['center_created_date'] }}</td>
+                <td>{{ row['expiry_date'] }}</td>
+                <td>{{ row['product'] }}</td>
+                <td>{{ row['license_key'] }}</td>
+                <td>{{ row['hours_spent'] }}</td>
+                <td>{{ row['hours_teachers'] }}</td>
+                <td>{{ row['hours_students'] }}</td>
+                <td>{{ row['num_logins'] }}</td>
+                <td>{{ row['teacher_logins'] }}</td>
+                <td>{{ row['student_logins'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- First Heatmap Section -->
+    <h2>Usage Heatmap</h2>
+
     <form id="dataForm">
-        <label for="regionDropdown">Select Reseller:</label>
+        <label for="regionDropdown">Select Reseller (optional):</label>
         <select id="regionDropdown" name="regionDropdown" onchange="updateCenters()">
             <option value="">Select a Reseller</option>
             {% for region in region_options %}
                 <option value="{{ region }}">{{ region }}</option>
             {% endfor %}
         </select>
-
         <label for="centerDropdown">Select School (optional):</label>
         <select id="centerDropdown" name="centerDropdown">
-            <option value="">None</option>
+            <option value="">Select a School</option>
         </select>
-
         <label for="month">Month:</label>
         <select id="month" name="month" required>
             <option value="">Select Month</option>
         </select>
-
         <label for="year">Year:</label>
         <select id="year" name="year" required>
             <option value="">Select Year</option>
         </select>
-
         <input type="button" value="Generate Heatmap" onclick="generateHeatmap()">
-    </form><br><br><br>
-
-    <div id="heatmap">
-        <!-- Heatmap will be displayed here -->
+    </form>
+    <div id="loadingIndicator" style="display: none;">
+    <p><p style="font-style: italic;">Loading heatmap, please wait...</p>
     </div>
+    <div id="heatmap"></div><br><br><br><br><br><br><br><br><br><br><br><br>
+
+    <!-- Placeholder for Second Heatmap Section -->
+    <h2>Logins Heatmap</h2>
+    <!-- Form and heatmap for the second heatmap will go here -->
+    <div id="secondHeatmap"></div>
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         populateMonthDropdown();
         populateYearDropdown();
     });
+    // Additional scripts from previous code...
+    </script>
+</body>
+</html>
 
-    function populateMonthDropdown() {
-        var monthDropdown = document.getElementById('month');
-        for (var month = 1; month <= 12; month++) {
-            var option = document.createElement('option');
-            option.value = month;
-            option.text = month;
-            monthDropdown.appendChild(option);
+
+<script>
+        document.addEventListener('DOMContentLoaded', function () {
+        populateMonthDropdown();
+        populateYearDropdown();
+        generateInitialHeatmap();
+        document.getElementById('endDate').value = new Date().toISOString().slice(0, 10);
+        document.getElementById('endDate').min = document.getElementById('startDate').value;
+        document.getElementById('startDate').addEventListener('change', function() {
+        document.getElementById('endDate').min = this.value;
+        });
+    });
+
+function populateMonthDropdown() {
+    var monthDropdown = document.getElementById('month');
+    var currentMonth = new Date().getMonth() + 1; // getMonth is zero-based; adding 1 to align with human-readable format
+    for (var month = 1; month <= 12; month++) {
+        var option = document.createElement('option');
+        option.value = month;
+        option.text = month;
+        if (month === currentMonth) {
+            option.selected = true; // Set the current month as selected
         }
+        monthDropdown.appendChild(option);
     }
+}
 
-    function populateYearDropdown() {
-        var yearDropdown = document.getElementById('year');
-        var currentYear = new Date().getFullYear();
-        for (var year = currentYear; year >= 2000; year--) {
-            var option = document.createElement('option');
-            option.value = year;
-            option.text = year;
-            yearDropdown.appendChild(option);
+function populateYearDropdown() {
+    var yearDropdown = document.getElementById('year');
+    var currentYear = new Date().getFullYear();
+    for (var year = currentYear; year >= 2000; year--) {
+        var option = document.createElement('option');
+        option.value = year;
+        option.text = year;
+        if (year === currentYear) {
+            option.selected = true; // Set the current year as selected
         }
+        yearDropdown.appendChild(option);
     }
+}
 
-    function updateCenters() {
-        var region = document.getElementById('regionDropdown').value;
-        if (!region) {
-            document.getElementById('centerDropdown').innerHTML = '<option value="">All Centers</option>';
-            return;
-        }
+    
+function updateCenters() {
+    var region = document.getElementById('regionDropdown').value;
+    var centerDropdown = document.getElementById('centerDropdown');
+
+    if (!region) {
+        // If no reseller is selected:
+        centerDropdown.innerHTML = '<option value="">Select a School</option>'; // Reset the dropdown to only show the default option
+    } else {
+        // If a specific reseller is selected:
+        centerDropdown.innerHTML = '<option value="">Select a School</option>'; // Provide an option to prompt user selection
+
+        // Fetch centers related to the selected reseller via an AJAX POST request
         axios.post('/get_centers', `region=${region}`)
             .then(function (response) {
-                var centerDropdown = document.getElementById('centerDropdown');
-                centerDropdown.innerHTML = '<option value="">All Centers</option>';
+                // Populate the dropdown with centers received from the server
                 response.data.forEach(function (center) {
                     var option = document.createElement('option');
                     option.value = center;
@@ -136,20 +235,134 @@
                 });
             })
             .catch(function (error) {
-                console.log(error);
+                console.log('Error fetching centers:', error);
+                // Optionally, handle errors more gracefully in the UI
+            });
+    }
+}
+
+
+
+function showLoadingIndicator() {
+    document.getElementById('loadingIndicator').style.display = 'block'; // Show the loading indicator
+}
+
+function hideLoadingIndicator() {
+    document.getElementById('loadingIndicator').style.display = 'none'; // Hide the loading indicator
+}
+
+
+    function generateInitialHeatmap() {
+        // Set default parameters for the initial heatmap
+        showLoadingIndicator();
+        var today = new Date();
+        var month = today.getMonth() + 1; // JavaScript months are 0-based
+        var year = today.getFullYear();
+
+        // Construct default formData
+        var formData = new FormData();
+        formData.append('month', month);
+        formData.append('year', year);
+
+        // Send request to generate heatmap
+        axios.post('/update_heatmap', new URLSearchParams(formData))
+            .then(function(response) {
+                document.getElementById('heatmap').innerHTML = response.data;
+                hideLoadingIndicator();
+            })
+            .catch(function(error) {
+                console.log('Error generating initial heatmap:', error);
+                hideLoadingIndicator();
             });
     }
 
+    
+function filterDataTable() {
+    var startDate = document.getElementById('startDate').value;
+    var endDate = document.getElementById('endDate').value;
+
+    // Check if the date fields are filled
+    if (!startDate || !endDate) {
+        alert("Please fill in both the start date and end date.");
+        return; // Stop the function if dates are not filled
+    }
+
+    var formData = new FormData(document.getElementById('dataTableForm'));
+    showLoadingIndicator(); // Optionally show a loading indicator
+
+    axios.post('/filter_data_table', new URLSearchParams(formData))
+        .then(function(response) {
+            updateDataTable(response.data);
+            hideLoadingIndicator(); // Hide the loading indicator when done
+        })
+        .catch(function(error) {
+            console.error('Error filtering data table:', error);
+            hideLoadingIndicator(); // Ensure loading indicator is hidden on error
+        });
+}
+
+function showLoadingIndicator() {
+    document.getElementById('loadingIndicator').style.display = 'block'; // Show the loading indicator
+}
+
+function hideLoadingIndicator() {
+    document.getElementById('loadingIndicator').style.display = 'none'; // Hide the loading indicator
+}
+
+function updateDataTable(data) {
+    var table = $('#myDataTable').DataTable();
+    table.clear(); // Clear existing data
+    data.forEach(function(item) {
+        table.row.add([
+            item.region_name,
+            item.center_name,
+            item.regd_users,
+            item.regd_teachers,
+            item.trainer_limit,
+            item.regd_students,
+            item.student_limit,
+            item.center_created_date,
+            item.expiry_date,
+            item.product,
+            item.license_key,
+            item.hours_spent,
+            item.hours_teachers,
+            item.hours_students,
+            item.num_logins,
+            item.teacher_logins,
+            item.student_logins
+        ]);
+    });
+    table.draw(); // Redraw the table with new data
+}
+
+    
+
     function generateHeatmap() {
+        showLoadingIndicator();
         var formData = new FormData(document.getElementById('dataForm'));
         axios.post('/update_heatmap', new URLSearchParams(formData))
             .then(function(response) {
             document.getElementById('heatmap').innerHTML = response.data;
+            hideLoadingIndicator();
         })
         .catch(function(error) {
             console.log(error);
+            hideLoadingIndicator();
         });
     }
+    
+    $(document).ready(function() {
+        // Initialize DataTables on your table
+        var table = $('#myDataTable').DataTable({
+            "paging": true, // Enables pagination
+            "ordering": true, // Enables column sorting
+            "searching": true, // Enables the global search box
+            "info": true, // Provides information about the current page of data
+            "autoWidth": false // Disables automatic column width calculation
+        });
+    });
+    
     </script>
 </body>
 </html>
