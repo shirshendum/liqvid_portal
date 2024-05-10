@@ -202,7 +202,7 @@ def update_heatmap():
 
 @app.route('/filter_data_table', methods=['POST'])
 def filter_data_table():
-    region = request.form.get('tableRegionDropdown')
+    region = request.form['tableRegionDropdown'] if 'tableRegionDropdown' in request.form and request.form['tableRegionDropdown'] else None
     start_date = request.form.get('startDate')
     end_date = request.form.get('endDate')
     
@@ -227,24 +227,23 @@ def filter_data_table():
 
     # Base query for when no reseller is chosen
     
-    query = """SELECT region_name, center_name, regd_users, regd_teachers, trainer_limit, regd_students, student_limit, center_created_date, expiry_date, product, license_key, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins FROM
-    (SELECT region_id, region_name, center_id, center_name, COUNT(DISTINCT user_id) as regd_users,
-    COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id END) as regd_teachers, trainer_limit,
-    COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 END) as regd_students, student_limit, 
-    date(center_created_on) as center_created_date, DATE(DATE_ADD(center_created_on, INTERVAL expiry_days DAY)) AS expiry_date, product, license_key
-    FROM rpt_users_test WHERE region_name IN (%s) group by region_id, center_id) rut
-    LEFT JOIN (SELECT center_id, day, month, year, SUM(actual_seconds)/3600 AS hours_spent, SUM(CASE WHEN user_role = 'INSTRUCTOR' THEN actual_seconds ELSE 0 END)/3600 AS hours_teachers, SUM(CASE WHEN user_role = 'LEARNER' THEN actual_seconds ELSE 0 END)/3600 AS hours_students FROM rpt_hierarchical_usage GROUP BY center_id) rhu on rhu.center_id = rut.center_id
-    LEFT JOIN (SELECT center_id, day, month, year, COUNT(*) AS num_logins, COUNT(CASE WHEN user_role = 'INSTRUCTOR' THEN 1 ELSE NULL END) AS teacher_logins, COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 ELSE NULL END) AS student_logins FROM rpt_hierarchical_logins GROUP BY center_id) rhl on rhl.center_id = rut.center_id
-    """ % placeholders
+    query = """SELECT region_name, "na" as center_name, regd_users, regd_teachers, "na" as trainer_limit, regd_students, "na" as student_limit, "na" as center_created_date, "na" as expiry_date, "na" as product, "na" as license_key, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins FROM
+    (SELECT region_id, region_name, COUNT(DISTINCT user_id) as regd_users,
+    COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id END) as regd_teachers,
+    COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 END) as regd_students
+    FROM rpt_users_test WHERE region_name IN ({})
+    group by region_id) rut
+    LEFT JOIN (SELECT region_id, day, month, year, SUM(actual_seconds)/3600 AS hours_spent, SUM(CASE WHEN user_role = 'INSTRUCTOR' THEN actual_seconds ELSE 0 END)/3600 AS hours_teachers, SUM(CASE WHEN user_role = 'LEARNER' THEN actual_seconds ELSE 0 END)/3600 AS hours_students FROM rpt_hierarchical_usage 
+    WHERE (year > %s OR (year = %s AND month > %s) OR (year = %s AND month = %s AND day >= %s))
+    AND (year < %s OR (year = %s AND month < %s) OR (year = %s AND month = %s AND day <= %s))
+    GROUP BY region_id) rhu on rhu.region_id = rut.region_id
+    LEFT JOIN (SELECT region_id, day, month, year, COUNT(*) AS num_logins, COUNT(CASE WHEN user_role = 'INSTRUCTOR' THEN 1 ELSE NULL END) AS teacher_logins, COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 ELSE NULL END) AS student_logins FROM rpt_hierarchical_logins 
+    WHERE (year > %s OR (year = %s AND month > %s) OR (year = %s AND month = %s AND day >= %s))
+    AND (year < %s OR (year = %s AND month < %s) OR (year = %s AND month = %s AND day <= %s))
+    GROUP BY region_id) rhl on rhl.region_id = rut.region_id
+    """.format(placeholders)
 
-#    query = """
-#    SELECT * FROM your_table
-#    WHERE (year > %s OR (year = %s AND month > %s) OR (year = %s AND month = %s AND day >= %s))
-#      AND (year < %s OR (year = %s AND month < %s) OR (year = %s AND month = %s AND day <= %s))
-#    """
-
-    params = [region_options, start_year, start_year, start_month, start_year, start_month, start_day,
-              end_year, end_year, end_month, end_year, end_month, end_day]
+    params = region_options + [start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day, start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day]
 
     if region:
         # Extend the query to include a filter by the selected reseller
