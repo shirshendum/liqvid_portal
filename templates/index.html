@@ -53,7 +53,8 @@
 </head>
 <body>
     <h1>Liqvid Portal</h1>
-   <div id="lastUpdatedDisplay">Data last updated: <span id="lastUpdatedDate">Loading...</span></div>
+    <div id="lastUpdatedDisplay">Last updated: <span id="lastUpdatedDate"></span></div>
+
 
     <!-- Data Table Section -->
     <h2>1. Overview</h2>
@@ -177,6 +178,7 @@
         populateMonthDropdown();
         populateYearDropdown();
         generateInitialHeatmap();
+        fetchLastUpdatedDate();
         document.getElementById('endDate').value = new Date().toISOString().slice(0, 10);
         document.getElementById('endDate').min = document.getElementById('startDate').value;
         document.getElementById('startDate').addEventListener('change', function() {
@@ -242,15 +244,6 @@ function updateCenters() {
     }
 }
 
-
-
-function showLoadingIndicator() {
-    document.getElementById('loadingIndicator').style.display = 'block'; // Show the loading indicator
-}
-
-function hideLoadingIndicator() {
-    document.getElementById('loadingIndicator').style.display = 'none'; // Hide the loading indicator
-}
 
 
     function generateInitialHeatmap() {
@@ -353,6 +346,20 @@ function updateDataTable(data) {
         });
     }
     
+    
+    function fetchLastUpdatedDate() {
+        axios.get('/last_updated_date')
+            .then(function (response) {
+                document.getElementById('lastUpdatedDate').textContent = response.data.lastUpdated;
+            })
+            .catch(function (error) {
+                console.log('Error fetching last updated date:', error);
+                document.getElementById('lastUpdatedDate').textContent = 'Unavailable';
+            });
+    }
+
+
+
     $(document).ready(function() {
         // Initialize DataTables on your table
         var table = $('#myDataTable').DataTable({

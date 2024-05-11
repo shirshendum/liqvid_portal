@@ -200,6 +200,62 @@ def update_heatmap():
     return f'<img src="data:image/png;base64,{plot_url}" />'
    
 
+@app.route('/update_heatmap2', methods=['POST'])
+def update_heatmap2():
+    region = request.form['regionDropdown'] if 'regionDropdown' in request.form and request.form['regionDropdown'] else None
+    #center = request.form['centerDropdown'] if 'centerDropdown' in request.form and request.form['centerDropdown'] else None
+    month = request.form['month']
+    year = request.form['year']
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    if region:
+        query = """
+            SELECT center_name, day, SUM(login_count) as num_logins
+            FROM rpt_flat_logins
+            WHERE region_name = %s AND month = %s AND year = %s
+            GROUP BY day, center_name
+        """
+        cursor.execute(query, (region, month, year))
+        data = cursor.fetchall()
+        df = pd.DataFrame(data, columns=['center_name', 'day', 'num_logins'])
+            
+    else:
+        query = """
+            SELECT region_name, day, SUM(login_count) as num_logins
+            FROM rpt_flat_logins
+            WHERE month = %s AND year = %s
+            GROUP BY day, region_name """
+        cursor.execute(query, (month, year))
+        data = cursor.fetchall()
+        df = pd.DataFrame(data, columns=['reseller_name', 'day', 'num_logins'])
+        
+    cursor.close()
+    conn.close()
+
+    
+    if region:
+        df_pivot = df.pivot("center_name", "day", "num_logins")
+        plt.figure(figsize=(24, 10))
+        sns.heatmap(df_pivot, annot=True, fmt=".1f", cmap="YlGnBu", linewidths=.5)
+        plt.title("Logins by Center")
+
+    else:
+        df_pivot = df.pivot("reseller_name", "day", "num_logins")
+        plt.figure(figsize=(24, 10))
+        sns.heatmap(df_pivot, annot=True, fmt=".1f", cmap="YlGnBu", linewidths=.5)
+        plt.title("Logins by Reseller")
+
+    img = io.BytesIO()
+    plt.savefig(img, format='png', bbox_inches='tight')
+    img.seek(0)
+    plot_url = base64.b64encode(img.getvalue()).decode('utf8')
+    return f'<img src="data:image/png;base64,{plot_url}" />'
+
+
+
+
 @app.route('/filter_data_table', methods=['POST'])
 def filter_data_table():
     region = request.form['tableRegionDropdown'] if 'tableRegionDropdown' in request.form and request.form['tableRegionDropdown'] else None
@@ -268,8 +324,25 @@ def filter_data_table():
     results = cursor.fetchall()
     cursor.close()
     conn.close()
-
     return jsonify([dict(row) for row in results])
+        
+        
+@app.route('/last_updated_date', methods=['GET'])
+def last_updated_date():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # Query to fetch the last updated date; adjust table and column names as necessary
+    cursor.execute("SELECT MIN(timestamp) FROM rpt_users_test")
+    last_updated = cursor.fetchone()[0]
+    cursor.close()
+    conn.close()
+
+    if last_updated:
+        # Formatting the date if it exists
+        return jsonify({'lastUpdated': last_updated.strftime('%Y-%m-%d')})
+    else:
+        return jsonify({'lastUpdated': 'No data available'})
+
         
 if __name__ == '__main__':
     app.run(debug=True)
