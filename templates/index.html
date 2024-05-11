@@ -59,7 +59,7 @@
     <!-- Data Table Section -->
     <h2>1. Overview</h2>
     <form id="dataTableForm">
-    <label for="tableRegionDropdown">Select Reseller:</label>
+    <label for="tableRegionDropdown">Select Reseller (Optional):</label>
     <select id="tableRegionDropdown" name="tableRegionDropdown">
         <option value="">All Resellers</option>
         {% for region in region_options %}
@@ -76,9 +76,6 @@
     <input type="button" value="Filter Data" onclick="filterDataTable()">
     </form>
     
-    <div id="loadingIndicator" style="display: none;">
-    <p style="font-style: italic;">Loading table, please wait...</p>
-    </div>
     
     <table id="myDataTable" class="display">
         <thead>
@@ -160,6 +157,24 @@
     <!-- Placeholder for Second Heatmap Section -->
     <h2>3. Logins Heatmap</h2>
     <!-- Form and heatmap for the second heatmap will go here -->
+    <form id="heatmap2Form">
+    <label for="regionDropdown2">Select Reseller (optional):</label>
+    <select id="regionDropdown2" name="regionDropdown">
+        <option value="">Select a Reseller</option>
+        {% for region in region_options %}
+            <option value="{{ region }}">{{ region }}</option>
+        {% endfor %}
+    </select>
+    <label for="month2">Month:</label>
+    <select id="month2" name="month" required>
+        <option value="">Select Month</option>
+    </select>
+    <label for="year2">Year:</label>
+    <select id="year2" name="year" required>
+        <option value="">Select Year</option>
+    </select>
+    <input type="button" value="Generate Heatmap" onclick="generateSecondHeatmap()">
+    </form>
     <div id="secondHeatmap"></div>
 
     <script>
@@ -177,6 +192,8 @@
         document.addEventListener('DOMContentLoaded', function () {
         populateMonthDropdown();
         populateYearDropdown();
+        populateMonthDropdown2();
+        populateYearDropdown2();
         generateInitialHeatmap();
         fetchLastUpdatedDate();
         document.getElementById('endDate').value = new Date().toISOString().slice(0, 10);
@@ -357,6 +374,56 @@ function updateDataTable(data) {
                 document.getElementById('lastUpdatedDate').textContent = 'Unavailable';
             });
     }
+
+
+function generateSecondHeatmap() {
+    showLoadingIndicator();
+    var formData = new FormData(document.getElementById('heatmap2Form'));
+    axios.post('/update_heatmap2', new URLSearchParams(formData))
+        .then(function(response) {
+            document.getElementById('secondHeatmap').innerHTML = response.data;
+            hideLoadingIndicator();
+        })
+        .catch(function(error) {
+            console.log('Error generating the second heatmap:', error);
+            hideLoadingIndicator();
+        });
+}
+
+
+function populateMonthDropdown2() {
+    var monthDropdowns = [document.getElementById('month'), document.getElementById('month2')];
+    var currentMonth = new Date().getMonth() + 1;
+    monthDropdowns.forEach(dropdown => {
+        dropdown.innerHTML = ''; // Clear existing options
+        for (var month = 1; month <= 12; month++) {
+            var option = document.createElement('option');
+            option.value = month;
+            option.text = month;
+            if (month === currentMonth) {
+                option.selected = true;
+            }
+            dropdown.appendChild(option);
+        }
+    });
+}
+
+function populateYearDropdown2() {
+    var yearDropdowns = [document.getElementById('year'), document.getElementById('year2')];
+    var currentYear = new Date().getFullYear();
+    yearDropdowns.forEach(dropdown => {
+        dropdown.innerHTML = ''; // Clear existing options
+        for (var year = currentYear; year >= 2000; year--) {
+            var option = document.createElement('option');
+            option.value = year;
+            option.text = year;
+            if (year === currentYear) {
+                option.selected = true;
+            }
+            dropdown.appendChild(option);
+        }
+    });
+}
 
 
 

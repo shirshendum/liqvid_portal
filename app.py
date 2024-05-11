@@ -233,7 +233,7 @@ def update_heatmap2():
         
     cursor.close()
     conn.close()
-
+    df['num_logins'] = df['num_logins'].astype(float)
     
     if region:
         df_pivot = df.pivot("center_name", "day", "num_logins")
