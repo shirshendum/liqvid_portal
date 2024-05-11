@@ -198,13 +198,13 @@
 
 
 <script>
-        document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function () {
         populateMonthDropdown();
         populateYearDropdown();
         populateMonthDropdown2();
         populateYearDropdown2();
-        generateInitialHeatmap().then(generateInitialHeatmap2).catch(error => console.error("Failed to generate heatmaps", error));
         fetchLastUpdatedDate();
+        generateInitialHeatmap().then(generateInitialHeatmap2).catch(error => console.error("Failed to generate heatmaps", error));
         document.getElementById('endDate').value = new Date().toISOString().slice(0, 10);
         document.getElementById('endDate').min = document.getElementById('startDate').value;
         document.getElementById('startDate').addEventListener('change', function() {
@@ -269,7 +269,6 @@ function updateCenters() {
             });
     }
 }
-
 
 
 function generateInitialHeatmap() {
@@ -345,6 +344,7 @@ function filterDataTable() {
             hideLoadingIndicatorTable(); // Ensure loading indicator is hidden on error
         });
 }
+}
 
 
 function updateDataTable(data) {
@@ -376,19 +376,19 @@ function updateDataTable(data) {
 
     
 
-    function generateHeatmap() {
-        showLoadingIndicator();
-        var formData = new FormData(document.getElementById('dataForm'));
-        axios.post('/update_heatmap', new URLSearchParams(formData))
-            .then(function(response) {
-            document.getElementById('heatmap').innerHTML = response.data;
-            hideLoadingIndicator();
-        })
-        .catch(function(error) {
-            console.log(error);
-            hideLoadingIndicator();
-        });
-    }
+function generateHeatmap() {
+    showLoadingIndicator();
+    var formData = new FormData(document.getElementById('dataForm'));
+    axios.post('/update_heatmap', new URLSearchParams(formData))
+        .then(function(response) {
+        document.getElementById('heatmap').innerHTML = response.data;
+        hideLoadingIndicator();
+    })
+    .catch(function(error) {
+        console.log(error);
+        hideLoadingIndicator();
+    });
+}
     
     
 
@@ -441,16 +441,16 @@ function populateYearDropdown2() {
     });
 }
 
-    function fetchLastUpdatedDate() {
-        axios.get('/last_updated_date')
-            .then(function (response) {
-                document.getElementById('lastUpdatedDate').textContent = response.data.lastUpdated;
-            })
-            .catch(function (error) {
-                console.log('Error fetching last updated date:', error);
-                document.getElementById('lastUpdatedDate').textContent = 'Unavailable';
-            });
-    }
+function fetchLastUpdatedDate() {
+     axios.get('/last_updated_date')
+        .then(function (response) {
+            document.getElementById('lastUpdatedDate').textContent = response.data.lastUpdated;
+        })
+        .catch(function (error) {
+            console.log('Error fetching last updated date:', error);
+            document.getElementById('lastUpdatedDate').textContent = 'Unavailable';
+        });
+}
 
 
 
