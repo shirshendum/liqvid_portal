@@ -1,19 +1,21 @@
 import mysql.connector
 import pandas as pd
-
+import os
 from flask import Flask, render_template, request, jsonify
 import seaborn as sns
 import matplotlib.pyplot as plt
 import io
 import base64
-
-app = Flask(__name__)
-
 import configparser
 from datetime import datetime
 
+app = Flask(__name__)
+
 conf = configparser.ConfigParser()
-conf.read('/home/shirshendu/Desktop/back_1/configs/config_production_db.ini')
+config_file_path = os.path.join(os.getcwd(), 'configs', 'config_production_db.ini')
+
+print(config_file_path)
+conf.read(config_file_path)
 
 db_host = conf['mysql']['host']
 db_user = conf['mysql']['user']
@@ -345,6 +347,8 @@ def last_updated_date():
 
         
 if __name__ == '__main__':
+    env = os.getenv('FLASK_ENV', 'development')
+    debug_mode = (env == 'development')
     app.run(debug=True)
 
 
