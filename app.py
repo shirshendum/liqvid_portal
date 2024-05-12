@@ -349,6 +349,6 @@ def last_updated_date():
 if __name__ == '__main__':
     env = os.getenv('FLASK_ENV', 'development')
     debug_mode = (env == 'development')
-    app.run(debug=True)
+    app.run(host = '0.0.0.0', port = 5000, debug=debug_mode)
 
 
