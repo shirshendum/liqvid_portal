@@ -85,21 +85,21 @@
             <tr>
                 <th>Reseller</th>
                 <th>School</th>
-                <th>Regd_users</th>
-                <th>Regd_teachers</th>
-                <th>Regd_students</th>
+                <th>Total_users</th>
+                <th>Total_teachers</th>
+                <th>Total_students</th>
                 <th>Trainer_limit</th>
                 <th>Student_limit</th>
                 <th>Center_created</th>
                 <th>Days_remaining</th>
-                <th>Product</th>
-                <th>License_key</th>
                 <th>Hours_Spent</th>
                 <th>Hours_Teachers</th>
                 <th>Hours_Students</th>
                 <th>Num_logins</th>
                 <th>Teacher_logins</th>
                 <th>Student_logins</th>
+                <th>Product</th>
+                <th>License_key</th>
             </tr>
         </thead>
         <tbody>
@@ -114,14 +114,14 @@
                 <td>{{ row['student_limit'] }}</td>
                 <td>{{ row['center_created_date'] }}</td>
                 <td>{{ row['expiry_date'] }}</td>
-                <td>{{ row['product'] }}</td>
-                <td>{{ row['license_key'] }}</td>
                 <td>{{ row['hours_spent'] }}</td>
                 <td>{{ row['hours_teachers'] }}</td>
                 <td>{{ row['hours_students'] }}</td>
                 <td>{{ row['num_logins'] }}</td>
                 <td>{{ row['teacher_logins'] }}</td>
                 <td>{{ row['student_logins'] }}</td>
+                <td>{{ row['product'] }}</td>
+                <td>{{ row['license_key'] }}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -361,14 +361,14 @@ function updateDataTable(data) {
             item.student_limit,
             item.center_created_date,
             item.expiry_date,
-            item.product,
-            item.license_key,
             item.hours_spent,
             item.hours_teachers,
             item.hours_students,
             item.num_logins,
             item.teacher_logins,
-            item.student_logins
+            item.student_logins,
+            item.product,
+            item.license_key
         ]);
     });
     table.draw(); // Redraw the table with new data

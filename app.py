@@ -35,14 +35,14 @@ def get_db_connection():
 def index():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT DISTINCT region_name FROM rpt_flat_usage")
+    cursor.execute("""SELECT DISTINCT region_name FROM rpt_users_test WHERE region_name NOT IN ("Learning Demo", "Globus Digital Language Lab Dummy", "Cambridge Capable Demo", "SchoolNet - Not Used", "Engrezi - Removed") AND region_name IS NOT NULL""")
     region_options = [item[0] for item in cursor.fetchall()]
     cursor.close()
     conn.close()
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     placeholders = ', '.join(['%s']*len(region_options))
-    query = """ SELECT region_name, "na" as center_name, regd_users, regd_teachers, regd_students, "na" as trainer_limit, "na" as student_limit, "na" as center_created_date, "na" as expiry_date, "na" as product, "na" as license_key, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins FROM
+    query = """ SELECT region_name, "na" as center_name, regd_users, regd_teachers, regd_students, "na" as trainer_limit, "na" as student_limit, "na" as center_created_date, "na" as expiry_date, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins, "na" as product, "na" as license_key FROM
     (SELECT region_id, region_name, center_id, center_name, COUNT(DISTINCT user_id) as regd_users,
     COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id END) as regd_teachers, trainer_limit,
     COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 END) as regd_students, student_limit, 
@@ -285,7 +285,7 @@ def filter_data_table():
 
     # Base query for when no reseller is chosen
     
-    query = """SELECT region_name, "na" as center_name, regd_users, regd_teachers, regd_students, "na" as trainer_limit, "na" as student_limit, "na" as center_created_date, "na" as expiry_date, "na" as product, "na" as license_key, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins FROM
+    query = """SELECT region_name, "na" as center_name, regd_users, regd_teachers, regd_students, "na" as trainer_limit, "na" as student_limit, "na" as center_created_date, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins, "na" as expiry_date, "na" as product, "na" as license_key FROM
     (SELECT region_id, region_name, COUNT(DISTINCT user_id) as regd_users,
     COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id END) as regd_teachers,
     COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 END) as regd_students
@@ -305,7 +305,7 @@ def filter_data_table():
 
     if region:
         # Extend the query to include a filter by the selected reseller
-        query = """SELECT region_name, center_name, regd_users, regd_teachers, regd_students, trainer_limit, student_limit, center_created_date, expiry_date, product, license_key, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins FROM
+        query = """SELECT region_name, center_name, regd_users, regd_teachers, regd_students, trainer_limit, student_limit, center_created_date, expiry_date, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins, product, license_key FROM
     (SELECT region_id, region_name, center_id, center_name, COUNT(DISTINCT user_id) as regd_users,
     COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id END) as regd_teachers, trainer_limit,
     COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 END) as regd_students, student_limit, 
@@ -319,7 +319,8 @@ def filter_data_table():
     LEFT JOIN (SELECT center_id, day, month, year, COUNT(*) AS num_logins, COUNT(CASE WHEN user_role = 'INSTRUCTOR' THEN 1 ELSE NULL END) AS teacher_logins, COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 ELSE NULL END) AS student_logins FROM rpt_hierarchical_logins 
     WHERE (year > %s OR (year = %s AND month > %s) OR (year = %s AND month = %s AND day >= %s))
     AND (year < %s OR (year = %s AND month < %s) OR (year = %s AND month = %s AND day <= %s))
-    GROUP BY center_id) rhl on rhl.center_id = rut.center_id"""
+    GROUP BY center_id) rhl on rhl.center_id = rut.center_id
+    ORDER BY expiry_date"""
         params = [region, start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day, start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day]
 
     cursor.execute(query, params)
