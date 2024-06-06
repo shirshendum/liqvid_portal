@@ -85,19 +85,22 @@
             <tr>
                 <th>Reseller</th>
                 <th>School</th>
-                <th>Total_users</th>
-                <th>Total_teachers</th>
-                <th>Total_students</th>
-                <th>Trainer_limit</th>
-                <th>Student_limit</th>
                 <th>Center_created</th>
                 <th>Days_remaining</th>
+                <th>Users_added</th>
+                <th>Teachers_added</th>
+                <th>Students_added</th>
                 <th>Hours_Spent</th>
                 <th>Hours_Teachers</th>
                 <th>Hours_Students</th>
                 <th>Num_logins</th>
                 <th>Teacher_logins</th>
                 <th>Student_logins</th>
+                <th>Total_users</th>
+                <th>Total_teachers</th>
+                <th>Total_students</th>
+                <th>Trainer_limit</th>
+                <th>Student_limit</th>
                 <th>Product</th>
                 <th>License_key</th>
             </tr>
@@ -107,19 +110,22 @@
             <tr>
                 <td>{{ row['region_name'] }}</td>
                 <td>{{ row['center_name'] }}</td>
-                <td>{{ row['regd_users'] }}</td>
-                <td>{{ row['regd_teachers'] }}</td>
-                <td>{{ row['regd_students'] }}</td>
-                <td>{{ row['trainer_limit'] }}</td>
-                <td>{{ row['student_limit'] }}</td>
                 <td>{{ row['center_created_date'] }}</td>
                 <td>{{ row['expiry_date'] }}</td>
+                <td>{{ row['users_added'] }}</td>
+                <td>{{ row['teachers_added'] }}</td>
+                <td>{{ row['students_added'] }}</td>
                 <td>{{ row['hours_spent'] }}</td>
                 <td>{{ row['hours_teachers'] }}</td>
                 <td>{{ row['hours_students'] }}</td>
                 <td>{{ row['num_logins'] }}</td>
                 <td>{{ row['teacher_logins'] }}</td>
                 <td>{{ row['student_logins'] }}</td>
+                <td>{{ row['regd_users'] }}</td>
+                <td>{{ row['regd_teachers'] }}</td>
+                <td>{{ row['regd_students'] }}</td>
+                <td>{{ row['trainer_limit'] }}</td>
+                <td>{{ row['student_limit'] }}</td>
                 <td>{{ row['product'] }}</td>
                 <td>{{ row['license_key'] }}</td>
             </tr>
@@ -354,19 +360,22 @@ function updateDataTable(data) {
         table.row.add([
             item.region_name,
             item.center_name,
-            item.regd_users,
-            item.regd_teachers,
-            item.regd_students,
-            item.trainer_limit,
-            item.student_limit,
             item.center_created_date,
             item.expiry_date,
+            item.users_added,
+            item.teachers_added,
+            item.students_added,
             item.hours_spent,
             item.hours_teachers,
             item.hours_students,
             item.num_logins,
             item.teacher_logins,
             item.student_logins,
+            item.regd_users,
+            item.regd_teachers,
+            item.regd_students,
+            item.trainer_limit,
+            item.student_limit,
             item.product,
             item.license_key
         ]);
