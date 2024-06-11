@@ -272,8 +272,6 @@ def update_heatmap2():
     return f'<img src="data:image/png;base64,{plot_url}" />'
 
 
-
-
 @app.route('/filter_data_table', methods=['POST'])
 def filter_data_table():
     region = request.form['tableRegionDropdown'] if 'tableRegionDropdown' in request.form and request.form['tableRegionDropdown'] else None
@@ -282,36 +280,34 @@ def filter_data_table():
     
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT DISTINCT region_name FROM rpt_flat_usage")
+    cursor.execute("""SELECT DISTINCT region_name FROM rpt_users_test WHERE region_name NOT IN ("Learning Demo", "Globus Digital Language Lab Dummy", "Cambridge Capable Demo", "SchoolNet - Not Used", "Engrezi - Removed") AND region_name IS NOT NULL""")
     region_options = [item[0] for item in cursor.fetchall()]
+    placeholders = ', '.join(['%s']*len(region_options))
     cursor.close()
     conn.close()
 
-
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    placeholders = ', '.join(['%s']*len(region_options))
-    
-    # Parse the start and end dates into components
+# Parse the start and end dates into components
     start_year, start_month, start_day = map(int, start_date.split('-'))
     end_year, end_month, end_day = map(int, end_date.split('-'))
 
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    # Base query for when no reseller is chosen
     
-    query = """SELECT region_name, center_name, regd_users, regd_teachers, regd_students, trainer_limit, student_limit, center_created_date, expiry_date, users_added, teachers_added, students_added, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins, product, license_key FROM
+    if region is None:
+        print(region)
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary = True)
+        query = """SELECT region_name, center_name, regd_users, regd_teachers, regd_students, trainer_limit, student_limit, center_created_date, expiry_date, users_added, teachers_added, students_added, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins, product, license_key FROM
     (SELECT region_id, region_name, center_id, center_name, trainer_limit, student_limit, date(center_created_on) as center_created_date, 
     DATEDIFF(DATE(DATE_ADD(center_created_on, INTERVAL expiry_days DAY)), CURRENT_DATE()) AS expiry_date, COUNT(DISTINCT user_id) as regd_users,
     COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id END) as regd_teachers,
     COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 END) as regd_students, product, license_key
     FROM rpt_users_test WHERE region_name IN ({})
-    group by region_id) rut
+    group by region_id, center_id) rut
+    
     LEFT JOIN (SELECT region_id, day, month, year, SUM(actual_seconds)/3600 AS hours_spent, SUM(CASE WHEN user_role = 'INSTRUCTOR' THEN actual_seconds ELSE 0 END)/3600 AS hours_teachers, SUM(CASE WHEN user_role = 'LEARNER' THEN actual_seconds ELSE 0 END)/3600 AS hours_students FROM rpt_hierarchical_usage 
     WHERE (year > %s OR (year = %s AND month > %s) OR (year = %s AND month = %s AND day >= %s))
     AND (year < %s OR (year = %s AND month < %s) OR (year = %s AND month = %s AND day <= %s))
     GROUP BY region_id) rhu on rhu.region_id = rut.region_id
+    
     LEFT JOIN (SELECT region_id, day, month, year, COUNT(*) AS num_logins, COUNT(CASE WHEN user_role = 'INSTRUCTOR' THEN 1 ELSE NULL END) AS teacher_logins, COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 ELSE NULL END) AS student_logins FROM rpt_hierarchical_logins 
     WHERE (year > %s OR (year = %s AND month > %s) OR (year = %s AND month = %s AND day >= %s))
     AND (year < %s OR (year = %s AND month < %s) OR (year = %s AND month = %s AND day <= %s))
@@ -324,13 +320,22 @@ def filter_data_table():
     GROUP BY center_id) rut2 ON rut2.center_id = rut.center_id
     
     ORDER BY expiry_date
-    """.format(placeholders)
+        """.format(placeholders)
 
-    params = region_options + [start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day, start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day, start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day]
-
+        params = region_options + [start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day, start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day, start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day]
+        #print(region_options)
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        #print(len(rows))
+        print(len(region_options))
+        cursor.close()
+        conn.close()
+        
     if region:
         # Extend the query to include a filter by the selected reseller
-        #print(region)
+        print(region)
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary = True)
         query = """SELECT region_name, center_name, regd_users, regd_teachers, regd_students, trainer_limit, student_limit, center_created_date, expiry_date, users_added, teachers_added, students_added, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins, product, license_key 
         
     FROM (SELECT region_id, region_name, center_id, center_name, COUNT(DISTINCT user_id) as regd_users,
@@ -362,12 +367,13 @@ def filter_data_table():
     ORDER BY expiry_date"""
         params = [region, start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day, start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day, start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day]
 
-    cursor.execute(query, params)
-    results = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    print(len(results))
-    return jsonify([dict(row) for row in results])
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        print(len(rows))
+    #return render_template('index.html', region_options = region_options, data = rows)
+    return jsonify([dict(row) for row in rows])
         
         
 @app.route('/last_updated_date', methods=['GET'])
