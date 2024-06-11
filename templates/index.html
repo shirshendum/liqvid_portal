@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html>
+    
 <head>
     <title>Liqvid Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/1.6.2/css/buttons.dataTables.min.css">
     <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
     <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.6.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.6.2/js/buttons.html5.min.js"></script>
+    
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -90,10 +96,10 @@
                 <th>Users_added</th>
                 <th>Teachers_added</th>
                 <th>Students_added</th>
-                <th>Hours_Spent</th>
+                <th>Hours_Total</th>
                 <th>Hours_Teachers</th>
                 <th>Hours_Students</th>
-                <th>Num_logins</th>
+                <th>Total_logins</th>
                 <th>Teacher_logins</th>
                 <th>Student_logins</th>
                 <th>Total_users</th>
@@ -132,10 +138,6 @@
             {% endfor %}
         </tbody>
     </table>
-
-
-
-
 
 
     <!-- First Heatmap Section -->
@@ -491,16 +493,24 @@ function hideLoadingIndicator2() {
 
 
 
-    $(document).ready(function() {
-        // Initialize DataTables on your table
-        var table = $('#myDataTable').DataTable({
-            "paging": true, // Enables pagination
-            "ordering": true, // Enables column sorting
-            "searching": true, // Enables the global search box
-            "info": true, // Provides information about the current page of data
-            "autoWidth": false // Disables automatic column width calculation
-        });
+$(document).ready(function() {
+    $('#myDataTable').DataTable({
+        dom: 'Bfrtip',  // Defines the table control elements to appear on the page (filtering, pagination, buttons)
+        buttons: [      // Defines the buttons to be included
+            {
+                extend: 'csvHtml5',  // Uses the HTML5 button type for exporting to CSV
+                text: 'Download CSV',  // Text shown on the button
+                titleAttr: 'Export CSV',  // Tooltip text
+                filename: 'data_export_' + new Date().toISOString().slice(0, 10)  // Filename for the exported file
+            }
+        ],
+        "paging": true,  // Enables pagination
+        "ordering": true,  // Enables sorting on columns
+        "searching": true,  // Enables searching within the table
+        "info": true,  // Displays information about the current view
+        "autoWidth": false  // Disables automatic column width calculation
     });
+});
     
     </script>
 </body>
