@@ -52,9 +52,9 @@ def index():
     
     FROM rpt_users_test WHERE region_name IN (%s) AND status = 1 group by region_id, center_id) rut
     
-    LEFT JOIN (SELECT center_id, day, month, year, SUM(actual_seconds)/3600 AS hours_spent, 
-    SUM(CASE WHEN user_role = 'INSTRUCTOR' THEN actual_seconds ELSE 0 END)/3600 AS hours_teachers, 
-    SUM(CASE WHEN user_role = 'LEARNER' THEN actual_seconds ELSE 0 END)/3600 AS hours_students FROM rpt_hierarchical_usage GROUP BY center_id) rhu on rhu.center_id = rut.center_id
+    LEFT JOIN (SELECT center_id, day, month, year, ROUND((SUM(actual_seconds)/3600), 1) AS hours_spent, 
+    ROUND((SUM(CASE WHEN user_role = 'INSTRUCTOR' THEN actual_seconds ELSE 0 END)/3600), 1) AS hours_teachers, 
+    ROUND((SUM(CASE WHEN user_role = 'LEARNER' THEN actual_seconds ELSE 0 END)/3600), 1) AS hours_students FROM rpt_hierarchical_usage GROUP BY center_id) rhu on rhu.center_id = rut.center_id
     
     LEFT JOIN (SELECT center_id, day, month, year, 
     COUNT(*) AS num_logins, COUNT(CASE WHEN user_role = 'INSTRUCTOR' THEN 1 ELSE NULL END) AS teacher_logins, 
@@ -299,7 +299,7 @@ def filter_data_table():
     COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 END) as regd_students, product, license_key
     FROM rpt_users_test WHERE region_name IN ({}) AND status = 1 GROUP BY region_id, center_id) rut
     
-    LEFT JOIN (SELECT region_id, day, month, year, SUM(actual_seconds)/3600 AS hours_spent, SUM(CASE WHEN user_role = 'INSTRUCTOR' THEN actual_seconds ELSE 0 END)/3600 AS hours_teachers, SUM(CASE WHEN user_role = 'LEARNER' THEN actual_seconds ELSE 0 END)/3600 AS hours_students FROM rpt_hierarchical_usage 
+    LEFT JOIN (SELECT region_id, day, month, year, ROUND((SUM(actual_seconds)/3600), 1) AS hours_spent, ROUND((SUM(CASE WHEN user_role = 'INSTRUCTOR' THEN actual_seconds ELSE 0 END)/3600), 1) AS hours_teachers, ROUND((SUM(CASE WHEN user_role = 'LEARNER' THEN actual_seconds ELSE 0 END)/3600), 1) AS hours_students FROM rpt_hierarchical_usage 
     WHERE (year > %s OR (year = %s AND month > %s) OR (year = %s AND month = %s AND day >= %s))
     AND (year < %s OR (year = %s AND month < %s) OR (year = %s AND month = %s AND day <= %s))
     GROUP BY center_id) rhu on rhu.center_id = rut.center_id
@@ -339,9 +339,9 @@ def filter_data_table():
     FROM rpt_users_test 
     WHERE region_name = %s AND status = 1 GROUP BY region_id, center_id) rut
     
-    LEFT JOIN (SELECT center_id, day, month, year, SUM(actual_seconds)/3600 AS hours_spent, 
-    SUM(CASE WHEN user_role = 'INSTRUCTOR' THEN actual_seconds ELSE 0 END)/3600 AS hours_teachers, 
-    SUM(CASE WHEN user_role = 'LEARNER' THEN actual_seconds ELSE 0 END)/3600 AS hours_students FROM rpt_hierarchical_usage 
+    LEFT JOIN (SELECT center_id, day, month, year, ROUND((SUM(actual_seconds)/3600), 1) AS hours_spent, 
+    ROUND((SUM(CASE WHEN user_role = 'INSTRUCTOR' THEN actual_seconds ELSE 0 END)/3600), 1) AS hours_teachers, 
+    ROUND((SUM(CASE WHEN user_role = 'LEARNER' THEN actual_seconds ELSE 0 END)/3600), 1) AS hours_students FROM rpt_hierarchical_usage 
     WHERE (year > %s OR (year = %s AND month > %s) OR (year = %s AND month = %s AND day >= %s))
     AND (year < %s OR (year = %s AND month < %s) OR (year = %s AND month = %s AND day <= %s))
     GROUP BY center_id) rhu on rhu.center_id = rut.center_id
