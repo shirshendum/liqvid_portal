@@ -55,6 +55,12 @@
             margin-top: 20px;
             background-color: white;
         }
+    
+  .highlight {
+    background-color: #e8f4f8; /* Soft blue shade */
+    color: #333; /* Ensuring that the text is readable */
+  }
+    
     </style>
 </head>
 <body>
@@ -91,24 +97,24 @@
             <tr>
                 <th>Reseller</th>
                 <th>School</th>
-                <th>Center_created</th>
-                <th>Days_remaining</th>
-                <th>Users_added</th>
-                <th>Teachers_added</th>
-                <th>Students_added</th>
-                <th>Hours_Total</th>
-                <th>Hours_Teachers</th>
-                <th>Hours_Students</th>
-                <th>Total_logins</th>
-                <th>Teacher_logins</th>
-                <th>Student_logins</th>
-                <th>Total_users</th>
-                <th>Total_teachers</th>
-                <th>Total_students</th>
-                <th>Trainer_limit</th>
-                <th>Student_limit</th>
+                <th>Center created</th>
+                <th>Days remaining</th>
+                <th>Users added</th>
+                <th>Teachers added</th>
+                <th>Students added</th>
+                <th>Hours Total</th>
+                <th>Hours Teachers</th>
+                <th>Hours Students</th>
+                <th>Total logins</th>
+                <th>Teacher logins</th>
+                <th>Student logins</th>
+                <th>Total users</th>
+                <th>Total teachers</th>
+                <th>Total students</th>
+                <th>Trainer limit</th>
+                <th>Student limit</th>
                 <th>Product</th>
-                <th>License_key</th>
+                <th>License key</th>
             </tr>
         </thead>
         <tbody>
@@ -504,13 +510,16 @@ $(document).ready(function() {
                 filename: 'data_export_' + new Date().toISOString().slice(0, 10)  // Filename for the exported file
             }
         ],
+                columnDefs: [
+            { targets: [4,5,6,7,8,9,10,11,12], className: 'highlight' }
+        ],
         "paging": true,  // Enables pagination
         "ordering": true,  // Enables sorting on columns
         "searching": true,  // Enables searching within the table
         "info": true,  // Display information about the current view
         "autoWidth": false,  // Disable automatic column width calculation
         "lengthChange": true,  // Enable the length changing feature
-        "lengthMenu": [10, 25, 50, 100, 200],  // Define the length menu for pagination
+        "lengthMenu": [10, 100, 1000],  // Define the length menu for pagination
         "pageLength": 10  // Set the default number of rows to display
     });
 });
