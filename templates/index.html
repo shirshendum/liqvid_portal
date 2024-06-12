@@ -495,7 +495,7 @@ function hideLoadingIndicator2() {
 
 $(document).ready(function() {
     $('#myDataTable').DataTable({
-        dom: 'Bfrtip',  // Defines the table control elements to appear on the page (filtering, pagination, buttons)
+        dom: '<"top"Bf>rt<"bottom"lip><"clear">',  // Defines the table control elements to appear on the page (filtering, pagination, buttons)
         buttons: [      // Defines the buttons to be included
             {
                 extend: 'csvHtml5',  // Uses the HTML5 button type for exporting to CSV
@@ -507,8 +507,11 @@ $(document).ready(function() {
         "paging": true,  // Enables pagination
         "ordering": true,  // Enables sorting on columns
         "searching": true,  // Enables searching within the table
-        "info": true,  // Displays information about the current view
-        "autoWidth": false  // Disables automatic column width calculation
+        "info": true,  // Display information about the current view
+        "autoWidth": false,  // Disable automatic column width calculation
+        "lengthChange": true,  // Enable the length changing feature
+        "lengthMenu": [25, 50, 100],  // Define the length menu for pagination
+        "pageLength": 25  // Set the default number of rows to display
     });
 });
     
