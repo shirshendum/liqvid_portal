@@ -42,15 +42,15 @@ def index():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     placeholders = ', '.join(['%s']*len(region_options))
-    query = """ SELECT region_name, center_name, regd_users, regd_teachers, regd_students, trainer_limit, student_limit, center_created_date, expiry_date, users_added, teachers_added, students_added, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins, product, license_key 
+    query = """ SELECT region_name, center_name, regd_users, regd_teachers, regd_students, trainer_limit, student_limit, center_created_date, days_remaining, users_added, teachers_added, students_added, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins, product, license_key 
     
     FROM
     (SELECT region_id, region_name, center_id, center_name, COUNT(DISTINCT user_id) as regd_users,
     COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id END) as regd_teachers, trainer_limit,
     COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 END) as regd_students, student_limit, 
-    date(center_created_on) as center_created_date, DATEDIFF(DATE(DATE_ADD(center_created_on, INTERVAL expiry_days DAY)), CURRENT_DATE()) AS expiry_date, product, license_key
+    date(center_created_on) as center_created_date, DATEDIFF(session_end_date, CURDATE()) AS days_remaining, product, license_key
     
-    FROM rpt_users_test WHERE region_name IN (%s) group by region_id, center_id) rut
+    FROM rpt_users_test WHERE region_name IN (%s) AND status = 1 group by region_id, center_id) rut
     
     LEFT JOIN (SELECT center_id, day, month, year, SUM(actual_seconds)/3600 AS hours_spent, 
     SUM(CASE WHEN user_role = 'INSTRUCTOR' THEN actual_seconds ELSE 0 END)/3600 AS hours_teachers, 
@@ -63,9 +63,6 @@ def index():
     LEFT JOIN (SELECT center_id, COUNT(*) AS users_added, 
     COUNT(CASE WHEN user_role = 'INSTRUCTOR' THEN 1 ELSE NULL END) AS teachers_added, COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 ELSE NULL END) AS students_added FROM `rpt_users_test`
     GROUP BY center_id) rut2 ON rut2.center_id = rut.center_id
-    
-    ORDER BY expiry_date
-    
     """ % placeholders
     cursor.execute(query, region_options)
     rows = cursor.fetchall()
@@ -295,12 +292,12 @@ def filter_data_table():
         print(region)
         conn = get_db_connection()
         cursor = conn.cursor(dictionary = True)
-        query = """SELECT region_name, center_name, regd_users, regd_teachers, regd_students, trainer_limit, student_limit, center_created_date, expiry_date, users_added, teachers_added, students_added, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins, product, license_key FROM
+        query = """SELECT region_name, center_name, regd_users, regd_teachers, regd_students, trainer_limit, student_limit, center_created_date, days_remaining, users_added, teachers_added, students_added, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins, product, license_key FROM
     (SELECT region_id, region_name, center_id, center_name, trainer_limit, student_limit, date(center_created_on) as center_created_date, 
-    DATEDIFF(DATE(DATE_ADD(center_created_on, INTERVAL expiry_days DAY)), CURRENT_DATE()) AS expiry_date, COUNT(DISTINCT user_id) as regd_users,
+    DATEDIFF(session_end_date, CURDATE()) AS days_remaining, COUNT(DISTINCT user_id) as regd_users,
     COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id END) as regd_teachers,
     COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 END) as regd_students, product, license_key
-    FROM rpt_users_test WHERE region_name IN ({})
+    FROM rpt_users_test WHERE region_name IN ({}) AND status = 1
     group by region_id, center_id) rut
     
     LEFT JOIN (SELECT region_id, day, month, year, SUM(actual_seconds)/3600 AS hours_spent, SUM(CASE WHEN user_role = 'INSTRUCTOR' THEN actual_seconds ELSE 0 END)/3600 AS hours_teachers, SUM(CASE WHEN user_role = 'LEARNER' THEN actual_seconds ELSE 0 END)/3600 AS hours_students FROM rpt_hierarchical_usage 
@@ -318,8 +315,6 @@ def filter_data_table():
     WHERE (year(user_created_on) > %s OR (year(user_created_on) = %s AND month(user_created_on) > %s) OR (year(user_created_on) = %s AND month(user_created_on) = %s AND day(user_created_on) >= %s))
     AND (year(user_created_on) < %s OR (year(user_created_on) = %s AND month(user_created_on) < %s) OR (year(user_created_on) = %s AND month(user_created_on) = %s AND day(user_created_on) <= %s))
     GROUP BY center_id) rut2 ON rut2.center_id = rut.center_id
-    
-    ORDER BY expiry_date
         """.format(placeholders)
 
         params = region_options + [start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day, start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day, start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day]
@@ -336,13 +331,13 @@ def filter_data_table():
         print(region)
         conn = get_db_connection()
         cursor = conn.cursor(dictionary = True)
-        query = """SELECT region_name, center_name, regd_users, regd_teachers, regd_students, trainer_limit, student_limit, center_created_date, expiry_date, users_added, teachers_added, students_added, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins, product, license_key 
+        query = """SELECT region_name, center_name, regd_users, regd_teachers, regd_students, trainer_limit, student_limit, center_created_date, days_remaining, users_added, teachers_added, students_added, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins, product, license_key 
         
     FROM (SELECT region_id, region_name, center_id, center_name, COUNT(DISTINCT user_id) as regd_users,
     COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id END) as regd_teachers, trainer_limit,
     COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 END) as regd_students, student_limit, 
-    date(center_created_on) as center_created_date, DATEDIFF(DATE(DATE_ADD(center_created_on, INTERVAL expiry_days DAY)), CURRENT_DATE()) AS expiry_date, product, license_key
-    FROM rpt_users_test WHERE region_name = %s 
+    date(center_created_on) as center_created_date, DATEDIFF(session_end_date, CURDATE()) AS days_remaining, product, license_key
+    FROM rpt_users_test WHERE region_name = %s AND status = 1
     group by region_id, center_id) rut
     
     LEFT JOIN (SELECT center_id, day, month, year, SUM(actual_seconds)/3600 AS hours_spent, 
@@ -363,8 +358,7 @@ def filter_data_table():
     WHERE (year(user_created_on) > %s OR (year(user_created_on) = %s AND month(user_created_on) > %s) OR (year(user_created_on) = %s AND month(user_created_on) = %s AND day(user_created_on) >= %s))
     AND (year(user_created_on) < %s OR (year(user_created_on) = %s AND month(user_created_on) < %s) OR (year(user_created_on) = %s AND month(user_created_on) = %s AND day(user_created_on) <= %s))
     GROUP BY center_id) rut2 ON rut2.center_id = rut.center_id
-    
-    ORDER BY expiry_date"""
+    """
         params = [region, start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day, start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day, start_year, start_year, start_month, start_year, start_month, start_day, end_year, end_year, end_month, end_year, end_month, end_day]
 
         cursor.execute(query, params)
