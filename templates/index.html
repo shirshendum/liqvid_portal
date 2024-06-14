@@ -95,8 +95,8 @@
     <table id="myDataTable" class="display">
         <thead>
             <tr>
-                <th>Reseller</th>
                 <th>School</th>
+                <th>Reseller Name</th>
                 <th>Center created</th>
                 <th>Days remaining</th>
                 <th>Users added</th>
@@ -120,8 +120,8 @@
         <tbody>
             {% for row in data %}
             <tr>
-                <td>{{ row['region_name'] }}</td>
                 <td>{{ row['center_name'] }}</td>
+                <td>{{ row['region_name'] }}</td>
                 <td>{{ row['center_created_date'] }}</td>
                 <td>{{ row['days_remaining'] }}</td>
                 <td>{{ row['users_added'] }}</td>
@@ -366,8 +366,8 @@ function updateDataTable(data) {
     table.clear(); // Clear existing data
     data.forEach(function(item) {
         table.row.add([
-            item.region_name,
             item.center_name,
+            item.region_name,
             item.center_created_date,
             item.days_remaining,
             item.users_added,
@@ -519,7 +519,7 @@ $(document).ready(function() {
         "info": true,  // Display information about the current view
         "autoWidth": false,  // Disable automatic column width calculation
         "lengthChange": true,  // Enable the length changing feature
-        "lengthMenu": [10, 100, 1000],  // Define the length menu for pagination
+        "lengthMenu": [10, 25, 50, 100, 1000],  // Define the length menu for pagination
         "pageLength": 10  // Set the default number of rows to display
     });
 });

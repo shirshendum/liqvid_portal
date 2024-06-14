@@ -60,8 +60,8 @@ def index():
     COUNT(*) AS num_logins, COUNT(CASE WHEN user_role = 'INSTRUCTOR' THEN 1 ELSE NULL END) AS teacher_logins, 
     COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 ELSE NULL END) AS student_logins FROM rpt_hierarchical_logins GROUP BY center_id) rhl on rhl.center_id = rut.center_id
     
-    LEFT JOIN (SELECT center_id, COUNT(*) AS users_added, 
-    COUNT(CASE WHEN user_role = 'INSTRUCTOR' THEN 1 ELSE NULL END) AS teachers_added, COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 ELSE NULL END) AS students_added FROM `rpt_users_test`
+    LEFT JOIN (SELECT center_id, COUNT(DISTINCT user_id) AS users_added, 
+    COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id ELSE NULL END) AS teachers_added, COUNT(DISTINCT CASE WHEN user_role = 'LEARNER' THEN user_id ELSE NULL END) AS students_added FROM `rpt_users_test`
     GROUP BY center_id) rut2 ON rut2.center_id = rut.center_id
     """ % placeholders
     cursor.execute(query, region_options)
@@ -309,8 +309,8 @@ def filter_data_table():
     AND (year < %s OR (year = %s AND month < %s) OR (year = %s AND month = %s AND day <= %s))
     GROUP BY center_id) rhl on rhl.center_id = rut.center_id
     
-    LEFT JOIN (SELECT center_id, COUNT(*) AS users_added, 
-    COUNT(CASE WHEN user_role = 'INSTRUCTOR' THEN 1 ELSE NULL END) AS teachers_added, COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 ELSE NULL END) AS students_added FROM `rpt_users_test`
+    LEFT JOIN (SELECT center_id, COUNT(DISTINCT user_id) AS users_added, 
+    COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id ELSE NULL END) AS teachers_added, COUNT(DISTINCT CASE WHEN user_role = 'LEARNER' THEN user_id ELSE NULL END) AS students_added FROM `rpt_users_test`
     WHERE (year(user_created_on) > %s OR (year(user_created_on) = %s AND month(user_created_on) > %s) OR (year(user_created_on) = %s AND month(user_created_on) = %s AND day(user_created_on) >= %s))
     AND (year(user_created_on) < %s OR (year(user_created_on) = %s AND month(user_created_on) < %s) OR (year(user_created_on) = %s AND month(user_created_on) = %s AND day(user_created_on) <= %s))
     GROUP BY center_id) rut2 ON rut2.center_id = rut.center_id
@@ -352,8 +352,8 @@ def filter_data_table():
     AND (year < %s OR (year = %s AND month < %s) OR (year = %s AND month = %s AND day <= %s))
     GROUP BY center_id) rhl on rhl.center_id = rut.center_id
     
-    LEFT JOIN (SELECT center_id, COUNT(*) AS users_added, 
-    COUNT(CASE WHEN user_role = 'INSTRUCTOR' THEN 1 ELSE NULL END) AS teachers_added, COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 ELSE NULL END) AS students_added FROM `rpt_users_test`
+    LEFT JOIN (SELECT center_id, COUNT(DISTINCT user_id) AS users_added, 
+    COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id ELSE NULL END) AS teachers_added, COUNT(DISTINCT CASE WHEN user_role = 'LEARNER' THEN user_id ELSE NULL END) AS students_added FROM `rpt_users_test`
     WHERE (year(user_created_on) > %s OR (year(user_created_on) = %s AND month(user_created_on) > %s) OR (year(user_created_on) = %s AND month(user_created_on) = %s AND day(user_created_on) >= %s))
     AND (year(user_created_on) < %s OR (year(user_created_on) = %s AND month(user_created_on) < %s) OR (year(user_created_on) = %s AND month(user_created_on) = %s AND day(user_created_on) <= %s))
     GROUP BY center_id) rut2 ON rut2.center_id = rut.center_id
