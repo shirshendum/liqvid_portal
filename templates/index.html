@@ -98,6 +98,7 @@
                 <th>School</th>
                 <th>Reseller Name</th>
                 <th>Center created</th>
+                <th>Session started</th>
                 <th>Days remaining</th>
                 <th>Users added</th>
                 <th>Teachers added</th>
@@ -123,6 +124,7 @@
                 <td>{{ row['center_name'] }}</td>
                 <td>{{ row['region_name'] }}</td>
                 <td>{{ row['center_created_date'] }}</td>
+                <td>{{ row['session_start_date'] }}</td>
                 <td>{{ row['days_remaining'] }}</td>
                 <td>{{ row['users_added'] }}</td>
                 <td>{{ row['teachers_added'] }}</td>
@@ -369,6 +371,7 @@ function updateDataTable(data) {
             item.center_name,
             item.region_name,
             item.center_created_date,
+            item.session_start_date,
             item.days_remaining,
             item.users_added,
             item.teachers_added,
