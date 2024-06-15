@@ -324,6 +324,15 @@ def filter_data_table():
         print(len(region_options))
         cursor.close()
         conn.close()
+        for row in rows:
+            try:
+                if row.get('center_created_date'):
+                    row['center_created_date'] = row['center_created_date'].strftime('%Y-%m-%d')
+                if row.get('session_start_date'):
+                    row['session_start_date'] = row['session_start_date'].strftime('%Y-%m-%d')
+            except Exception as e:
+                print(f"Error formatting the dates: {e}")
+
         
     if region:
         # Extend the query to include a filter by the selected reseller
@@ -365,6 +374,14 @@ def filter_data_table():
         cursor.close()
         conn.close()
         print(len(rows))
+        for row in rows:
+            try:
+                if row.get('center_created_date'):
+                    row['center_created_date'] = row['center_created_date'].strftime('%Y-%m-%d')
+                if row.get('session_start_date'):
+                    row['session_start_date'] = row['session_start_date'].strftime('%Y-%m-%d')
+            except Exception as e:
+                print(f"Error formatting the dates: {e}")    
     #return render_template('index.html', region_options = region_options, data = rows)
     return jsonify([dict(row) for row in rows])
         
