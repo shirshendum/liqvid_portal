@@ -61,7 +61,21 @@
     color: #333; /* Ensuring that the text is readable */
   }
     
-    </style>
+ button.toggleButton.active {
+    color: #333;
+    background-color: #B0E0E6;  /* Using a Bootstrap color for demonstration */
+}
+
+div.float-left {
+    float: left;
+}
+
+div.float-right {
+    float: right;
+}
+
+</style>
+
 </head>
 <body>
     <h1>Liqvid Portal</h1>
@@ -504,13 +518,30 @@ function hideLoadingIndicator2() {
 
 $(document).ready(function() {
     $('#myDataTable').DataTable({
-        dom: '<"top"Bf>rt<"bottom"lip><"clear">',  // Defines the table control elements to appear on the page (filtering, pagination, buttons)
+        dom: '<"top" <"float-left"B><"float-right"f>>rt<"bottom"lip><"clear">',
+        // dom: '<"top"Bf>rt<"bottom"lip><"clear">',  // Defines the table control elements to appear on the page (filtering, pagination, buttons)
         buttons: [      // Defines the buttons to be included
             {
                 extend: 'csvHtml5',  // Uses the HTML5 button type for exporting to CSV
                 text: 'Download CSV',  // Text shown on the button
                 titleAttr: 'Export CSV',  // Tooltip text
                 filename: 'data_export_' + new Date().toISOString().slice(0, 10)  // Filename for the exported file
+            },
+            {
+                text: 'Show Active Centers Only',
+                className: 'toggleButton', // Custom class for styling and state management
+                action: function (e, dt, node, config) {
+                    // Check if the button is already active
+                    if ($(node).hasClass('active')) {
+                        // Button is active, remove filter and active class
+                        $(node).removeClass('active');
+                        dt.columns(4).search('').draw(); // Clear the search on the specific column
+                    } else {
+                        // Button is not active, apply filter and add active class
+                        $(node).addClass('active');
+                        dt.columns(4).search('^(0|[1-9][0-9]*)$', true, false).draw(); // Apply regex search
+                    }
+                }
             }
         ],
                 columnDefs: [
