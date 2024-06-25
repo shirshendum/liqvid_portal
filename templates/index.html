@@ -111,8 +111,9 @@ div.float-right {
             <tr>
                 <th>School</th>
                 <th>Reseller Name</th>
-                <th>Center created</th>
-                <th>Session started</th>
+                <th>Center created date</th>
+                <th>Session start date</th>
+                <th>Session end date</th>
                 <th>Days remaining</th>
                 <th>Users added</th>
                 <th>Teachers added</th>
@@ -139,6 +140,7 @@ div.float-right {
                 <td>{{ row['region_name'] }}</td>
                 <td>{{ row['center_created_date'] }}</td>
                 <td>{{ row['session_start_date'] }}</td>
+                <td>{{ row['session_end_date'] }}</td>
                 <td>{{ row['days_remaining'] }}</td>
                 <td>{{ row['users_added'] }}</td>
                 <td>{{ row['teachers_added'] }}</td>
@@ -386,6 +388,7 @@ function updateDataTable(data) {
             item.region_name,
             item.center_created_date,
             item.session_start_date,
+            item.session_end_date,
             item.days_remaining,
             item.users_added,
             item.teachers_added,
@@ -535,17 +538,17 @@ $(document).ready(function() {
                     if ($(node).hasClass('active')) {
                         // Button is active, remove filter and active class
                         $(node).removeClass('active');
-                        dt.columns(4).search('').draw(); // Clear the search on the specific column
+                        dt.columns(5).search('').draw(); // Clear the search on the specific column
                     } else {
                         // Button is not active, apply filter and add active class
                         $(node).addClass('active');
-                        dt.columns(4).search('^(0|[1-9][0-9]*)$', true, false).draw(); // Apply regex search
+                        dt.columns(5).search('^(0|[1-9][0-9]*)$', true, false).draw(); // Apply regex search
                     }
                 }
             }
         ],
                 columnDefs: [
-            { targets: [5,6,7,8,9,10,11,12,13], className: 'highlight' }
+            { targets: [6,7,8,9,10,11,12,13,14], className: 'highlight' }
         ],
         "order": [[2, 'desc']],
         "paging": true,  // Enables pagination

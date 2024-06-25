@@ -42,13 +42,13 @@ def index():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     placeholders = ', '.join(['%s']*len(region_options))
-    query = """ SELECT region_name, center_name, "Please use dropdowns for accurate results" as regd_users, "Please use dropdowns for accurate results" as regd_teachers, "Please use dropdowns for accurate results" as regd_students, "Please use dropdowns for accurate results" as trainer_limit, "Please use dropdowns for accurate results" as student_limit, center_created_date, "Please use dropdowns for accurate results" as session_start_date, "Please use dropdowns for accurate results" as days_remaining, "Please" as users_added, "select" as teachers_added, "startdate" as students_added, "and" as hours_spent, "enddate" as hours_teachers, "to" as hours_students, "see" as num_logins, "these" as teacher_logins, "numbers" as student_logins, product, license_key 
+    query = """ SELECT region_name, center_name, regd_users, "Please use dropdowns for accurate results" as regd_teachers, "Please use dropdowns for accurate results" as regd_students, "Please use dropdowns for accurate results" as trainer_limit, "Please use dropdowns for accurate results" as student_limit, center_created_date, "Please use dropdowns for accurate results" as session_start_date, "Please use dropdowns for accurate results" as session_end_date, "Please use dropdowns for accurate results" as days_remaining, "Please" as users_added, "select" as teachers_added, "startdate" as students_added, "and" as hours_spent, "enddate" as hours_teachers, "to" as hours_students, "see" as num_logins, "these" as teacher_logins, "numbers" as student_logins, product, license_key 
     
     FROM
     (SELECT region_id, region_name, center_id, center_name, COUNT(DISTINCT user_id) as regd_users,
     COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id END) as regd_teachers, trainer_limit,
     COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 END) as regd_students, student_limit, 
-    date(center_created_on) as center_created_date, session_start_date, DATEDIFF(session_end_date, CURDATE()) AS days_remaining, product, license_key
+    date(center_created_on) as center_created_date, session_start_date, session_end_date, DATEDIFF(session_end_date, CURDATE()) AS days_remaining, product, license_key
     
     FROM rpt_users_test WHERE region_name IN (%s) AND status = 1 group by region_id, center_id) rut
     
@@ -69,6 +69,8 @@ def index():
     cursor.close()
     conn.close()
     return render_template('index.html', region_options = region_options, data = rows)
+ 
+
  
 @app.route('/get_batches', methods=['POST'])
 def get_batches():
@@ -292,8 +294,8 @@ def filter_data_table():
         print(region)
         conn = get_db_connection()
         cursor = conn.cursor(dictionary = True)
-        query = """SELECT region_name, center_name, regd_users, regd_teachers, regd_students, trainer_limit, student_limit, center_created_date, session_start_date, days_remaining, users_added, teachers_added, students_added, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins, product, license_key FROM
-    (SELECT region_id, region_name, center_id, center_name, trainer_limit, student_limit, date(center_created_on) as center_created_date, session_start_date,
+        query = """SELECT region_name, center_name, regd_users, regd_teachers, regd_students, trainer_limit, student_limit, center_created_date, session_start_date, session_end_date, days_remaining, users_added, teachers_added, students_added, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins, product, license_key FROM
+    (SELECT region_id, region_name, center_id, center_name, trainer_limit, student_limit, date(center_created_on) as center_created_date, session_start_date, session_end_date,
     DATEDIFF(session_end_date, CURDATE()) AS days_remaining, COUNT(DISTINCT user_id) as regd_users,
     COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id END) as regd_teachers,
     COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 END) as regd_students, product, license_key
@@ -330,6 +332,8 @@ def filter_data_table():
                     row['center_created_date'] = row['center_created_date'].strftime('%Y-%m-%d')
                 if row.get('session_start_date'):
                     row['session_start_date'] = row['session_start_date'].strftime('%Y-%m-%d')
+                if row.get('session_end_date'):
+                    row['session_end_date'] = row['session_end_date'].strftime('%Y-%m-%d')
             except Exception as e:
                 print(f"Error formatting the dates: {e}")
 
@@ -339,12 +343,12 @@ def filter_data_table():
         print(region)
         conn = get_db_connection()
         cursor = conn.cursor(dictionary = True)
-        query = """SELECT region_name, center_name, regd_users, regd_teachers, regd_students, trainer_limit, student_limit, center_created_date, session_start_date, days_remaining, users_added, teachers_added, students_added, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins, product, license_key 
+        query = """SELECT region_name, center_name, regd_users, regd_teachers, regd_students, trainer_limit, student_limit, center_created_date, session_start_date, session_end_date, days_remaining, users_added, teachers_added, students_added, hours_spent, hours_teachers, hours_students, num_logins, teacher_logins, student_logins, product, license_key 
         
     FROM (SELECT region_id, region_name, center_id, center_name, COUNT(DISTINCT user_id) as regd_users,
     COUNT(DISTINCT CASE WHEN user_role = 'INSTRUCTOR' THEN user_id END) as regd_teachers, trainer_limit,
     COUNT(CASE WHEN user_role = 'LEARNER' THEN 1 END) as regd_students, student_limit, 
-    date(center_created_on) as center_created_date, session_start_date, DATEDIFF(session_end_date, CURDATE()) AS days_remaining, product, license_key
+    date(center_created_on) as center_created_date, session_start_date, session_end_date, DATEDIFF(session_end_date, CURDATE()) AS days_remaining, product, license_key
     FROM rpt_users_test 
     WHERE region_name = %s AND status = 1 GROUP BY region_id, center_id) rut
     
@@ -380,6 +384,8 @@ def filter_data_table():
                     row['center_created_date'] = row['center_created_date'].strftime('%Y-%m-%d')
                 if row.get('session_start_date'):
                     row['session_start_date'] = row['session_start_date'].strftime('%Y-%m-%d')
+                if row.get('session_end_date'):
+                    row['session_end_date'] = row['session_end_date'].strftime('%Y-%m-%d')
             except Exception as e:
                 print(f"Error formatting the dates: {e}")    
     #return render_template('index.html', region_options = region_options, data = rows)
