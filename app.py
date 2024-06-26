@@ -42,7 +42,7 @@ def index():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     placeholders = ', '.join(['%s']*len(region_options))
-    query = """ SELECT region_name, center_name, regd_users, "Please use dropdowns for accurate results" as regd_teachers, "Please use dropdowns for accurate results" as regd_students, "Please use dropdowns for accurate results" as trainer_limit, "Please use dropdowns for accurate results" as student_limit, center_created_date, "Please use dropdowns for accurate results" as session_start_date, "Please use dropdowns for accurate results" as session_end_date, "Please use dropdowns for accurate results" as days_remaining, "Please" as users_added, "select" as teachers_added, "startdate" as students_added, "and" as hours_spent, "enddate" as hours_teachers, "to" as hours_students, "see" as num_logins, "these" as teacher_logins, "numbers" as student_logins, product, license_key 
+    query = """ SELECT region_name, center_name, regd_users, regd_teachers, regd_students, trainer_limit, student_limit, center_created_date, session_start_date, session_end_date, days_remaining, "Please" as users_added, "select" as teachers_added, "startdate" as students_added, "and" as hours_spent, "enddate" as hours_teachers, "to" as hours_students, "see" as num_logins, "these" as teacher_logins, "numbers" as student_logins, product, license_key 
     
     FROM
     (SELECT region_id, region_name, center_id, center_name, COUNT(DISTINCT user_id) as regd_users,
