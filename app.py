@@ -250,6 +250,8 @@ def update_heatmap2():
         
     cursor.close()
     conn.close()
+    #df['num_logins'] = df['num_logins'].astype(float)
+    #df['num_logins'] = pd.to_numeric(df['num_logins'], errors='coerce').fillna(0).astype(int)
     df['num_logins'] = df['num_logins'].astype(int)
     
     if region:
@@ -261,7 +263,7 @@ def update_heatmap2():
     else:
         df_pivot = df.pivot("reseller_name", "day", "num_logins")
         plt.figure(figsize=(24, 10))
-        sns.heatmap(df_pivot, annot=True, fmt=".1f", cmap="YlGnBu", linewidths=.5)
+        sns.heatmap(df_pivot, annot=True, fmt="d", cmap="YlGnBu", linewidths=.5)
         plt.title("Logins by Reseller")
 
     img = io.BytesIO()
